@@ -1,8 +1,10 @@
 mod widgets;
 
+use gtk::glib;
 use gtk::{
     Application, IconTheme,
     gdk::{self, Monitor},
+    glib::closure_local,
     prelude::*,
 };
 use widgets::sidebar::{SideBarProperties, sidebar};
@@ -46,5 +48,21 @@ fn activate(app: &Application) {
 }
 
 fn startup(_app: &Application) {
+    ballad_services::config::CONFIG_SERVICE.with(|config_service| {
+        config_service.connect_closure(
+            "config-changed",
+            false,
+            closure_local!(move |_: ballad_services::config::ConfigService,
+                                 config: &ballad_config::ShellConfig| {
+                println!("Config changed: {:?}", config);
+            }),
+        );
+    });
+    ballad_services::battery::BATTERY_SERVICE.with(|battery_service| {
+        battery_service.connect_charging_notify(|service| {
+            println!("Battery percentage: {}", service.percentage());
+        });
+    });
+
     IconTheme::default().add_search_path("assets/icons");
 }

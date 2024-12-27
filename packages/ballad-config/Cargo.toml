@@ -1,0 +1,13 @@
+[package]
+name = "ballad-config"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "1.0.216", features = ["derive"] }
+toml = "0.8.19"
+xdg = "2.5.2"
+gtk = { version = "0.9.5", package = "gtk4", features = ["v4_16"], optional = true }
+
+[features]
+gtk = ["dep:gtk"]

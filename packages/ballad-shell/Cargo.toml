@@ -7,3 +7,5 @@ edition = "2024"
 gtk = { version = "0.9.5", package = "gtk4", features = ["v4_16"] }
 gtk4-layer-shell = "0.4.0"
 typed-builder = "0.20.0"
+ballad-services = { path = "../ballad-services" }
+ballad-config = { path = "../ballad-config" }

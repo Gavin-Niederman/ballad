@@ -9,13 +9,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 
 [[package]]
+name = "ballad-config"
+version = "0.1.0"
+dependencies = [
+ "gtk4",
+ "serde",
+ "toml",
+ "xdg",
+]
+
+[[package]]
 name = "ballad-search"
 version = "0.1.0"
+
+[[package]]
+name = "ballad-services"
+version = "0.1.0"
+dependencies = [
+ "ballad-config",
+ "gtk4",
+]
 
 [[package]]
 name = "ballad-shell"
 version = "0.1.0"
 dependencies = [
+ "ballad-config",
+ "ballad-services",
  "gtk4",
  "gtk4-layer-shell",
  "typed-builder",
@@ -796,6 +816,12 @@ checksum = "36c1fec1a2bb5866f07c25f68c26e565c4c200aebb96d7e55710c19d3e8ac49b"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "xdg"
+version = "2.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "213b7324336b53d2414b2db8537e56544d981803139155afa84f76eeebb7a546"
 
 [[package]]
 name = "xml-rs"
