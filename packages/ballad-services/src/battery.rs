@@ -4,10 +4,11 @@ use gtk::glib::{self, Object};
 
 mod imp {
     use std::cell::{Cell, RefCell};
+    use std::sync::OnceLock;
 
     use gtk::gio::{Cancellable, DBusProxy, DBusProxyFlags};
-    use gtk::glib::ffi::GVariant;
-    use gtk::glib::{closure_local, Value, Variant};
+    use gtk::glib::subclass::Signal;
+    use gtk::glib::{Value, Variant, closure_local};
     use gtk::{gio, glib};
     use gtk::{glib::Properties, prelude::*, subclass::prelude::*};
 
@@ -49,6 +50,7 @@ mod imp {
             self.available.replace(available);
             self.obj().notify_available();
             if !available {
+                self.obj().emit_by_name::<()>("battery-changed", &[]);
                 return;
             }
 
@@ -58,7 +60,7 @@ mod imp {
 
             let state: u32 = get_property(proxy, "State").unwrap_or_default();
             self.charging.replace(state == 1);
-            self.charged.replace(state == 4);
+            self.charged.replace(state == 4 || percentage == 100.0);
             self.obj().notify_charging();
             self.obj().notify_charged();
 
@@ -79,6 +81,8 @@ mod imp {
             let energy_rate = get_property(proxy, "EnergyRate").unwrap_or_default();
             self.energy_rate.replace(energy_rate);
             self.obj().notify_energy_rate();
+
+            self.obj().emit_by_name::<()>("battery-changed", &[]);
         }
     }
 
@@ -119,6 +123,11 @@ mod imp {
             self.proxy.replace(Some(proxy));
 
             self.update();
+        }
+
+        fn signals() -> &'static [Signal] {
+            static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
+            SIGNALS.get_or_init(|| vec![Signal::builder("battery-changed").build()])
         }
     }
 }

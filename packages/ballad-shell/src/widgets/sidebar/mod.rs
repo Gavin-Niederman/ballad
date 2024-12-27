@@ -1,4 +1,9 @@
-use gtk::{gdk::Monitor, prelude::{GtkWindowExt, MonitorExt, OrientableExt, WidgetExt}, Application, ApplicationWindow, CenterBox};
+pub mod battery;
+
+use ballad_services::battery::BATTERY_SERVICE;
+use gtk::{
+    gdk::Monitor, prelude::{BoxExt, GtkWindowExt, MonitorExt, OrientableExt, WidgetExt}, Align, Application, ApplicationWindow, Box, CenterBox, Orientation
+};
 use typed_builder::TypedBuilder;
 
 use super::window::{Anchor, WindowProperties, window};
@@ -28,9 +33,25 @@ pub fn sidebar(
     );
 
     let container = CenterBox::new();
-    container.set_orientation(gtk::Orientation::Vertical);
+    container.set_orientation(Orientation::Vertical);
     container.set_css_classes(&["sidebar-container"]);
-    
+
+    let lower_section = Box::builder()
+        .orientation(Orientation::Vertical)
+        .valign(Align::End)
+        .build();
+
+    let battery_available = BATTERY_SERVICE.with(|service| service.available());
+    if battery_available {
+        let battery = battery::battery(
+            battery::BatteryProperties::builder()
+                .build(),
+        );
+        lower_section.append(&battery);
+    }
+
+    container.set_end_widget(Some(&lower_section));
+
     window.set_child(Some(&container));
     window
 }
