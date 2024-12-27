@@ -1,5 +1,11 @@
-use gtk::{gdk::{self, Monitor}, prelude::*, Application};
-use gtk4_layer_shell::{Edge, Layer, LayerShell};
+mod widgets;
+
+use gtk::{
+    Application, IconTheme,
+    gdk::{self, Monitor},
+    prelude::*,
+};
+use widgets::sidebar::{SideBarProperties, sidebar};
 
 fn main() {
     let app = Application::builder()
@@ -7,6 +13,7 @@ fn main() {
         .build();
 
     app.connect_activate(activate);
+    app.connect_startup(startup);
 
     app.run();
 }
@@ -14,27 +21,30 @@ fn main() {
 fn get_monitors() -> impl Iterator<Item = Monitor> {
     let display = gdk::Display::default().unwrap();
     let monitors = display.monitors();
-    let monitors = monitors.iter().map(|item| item.unwrap()).collect::<Vec<_>>();
+    let monitors = monitors
+        .iter()
+        .map(|item| item.unwrap())
+        .collect::<Vec<_>>();
     monitors.into_iter()
 }
 
 fn activate(app: &Application) {
     let monitors = get_monitors();
 
-    let window = gtk::ApplicationWindow::builder()
-        .application(app)
-        .title("Ballad Shell")
-        .build();
+    let sidebars = monitors.map(|monitor| {
+        sidebar(
+            SideBarProperties::builder()
+                .application(app)
+                .monitor(monitor)
+                .build(),
+        )
+    });
 
-    window.init_layer_shell();
-    window.set_layer(Layer::Top);
-    window.set_title(Some("Ballad Shell"));
-    window.set_anchor(Edge::Bottom, true);
-    window.set_anchor(Edge::Top, true);
-    window.set_anchor(Edge::Left, true);
+    sidebars.for_each(|sidebar| {
+        sidebar.present();
+    });
+}
 
-    let button = gtk::Button::with_label("Hello, world!");
-    window.set_child(Some(&button));
-
-    window.present();
+fn startup(_app: &Application) {
+    IconTheme::default().add_search_path("assets/icons");
 }
