@@ -1,4 +1,8 @@
-use gtk::{Application, ApplicationWindow, gdk::Monitor, prelude::GtkWindowExt};
+use gtk::{
+    Application, ApplicationWindow,
+    gdk::Monitor,
+    prelude::GtkWindowExt,
+};
 use gtk4_layer_shell::LayerShell;
 use typed_builder::TypedBuilder;
 
@@ -39,8 +43,8 @@ impl From<Layer> for gtk4_layer_shell::Layer {
 }
 
 #[derive(Debug, TypedBuilder, Clone, PartialEq, Eq)]
-#[builder(field_defaults(default))]
-pub struct WindowProperties<'a> {
+#[builder(field_defaults(default), build_method(into))]
+pub struct LayershellWindow<'a> {
     #[builder(setter(strip_option))]
     pub title: Option<&'a str>,
     #[builder(default = &[Anchor::Top, Anchor::Bottom, Anchor::Left, Anchor::Right])]
@@ -49,29 +53,37 @@ pub struct WindowProperties<'a> {
     pub layer: Layer,
     pub auto_exclusive: bool,
 
-    #[builder(!default)]
-    pub monitor: Monitor,
+    #[builder(setter(strip_option))]
+    pub monitor: Option<Monitor>,
 
     #[builder(!default)]
     pub application: &'a Application,
 }
 
-pub fn window(
-    WindowProperties {
+impl From<LayershellWindow<'_>> for ApplicationWindow {
+    fn from(properties: LayershellWindow) -> Self {
+        layershell_window(properties)
+    }
+}
+
+pub fn layershell_window(
+    LayershellWindow {
         title,
         anchors,
         layer,
         application,
         auto_exclusive,
         monitor,
-    }: WindowProperties<'_>,
+    }: LayershellWindow<'_>,
 ) -> ApplicationWindow {
     let window = ApplicationWindow::builder()
         .application(application)
         .build();
     window.init_layer_shell();
 
-    window.set_monitor(&monitor);
+    if let Some(monitor) = monitor {
+        window.set_monitor(&monitor);
+    }
     window.set_title(title);
     window.set_layer(layer.into());
 

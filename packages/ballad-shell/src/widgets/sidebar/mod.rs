@@ -3,32 +3,62 @@ pub mod screen_bevels;
 
 use ballad_services::battery::BATTERY_SERVICE;
 use gtk::{
-    Align, ApplicationWindow, Box, CenterBox, Orientation,
-    prelude::{BoxExt, GtkWindowExt, MonitorExt},
+    Align, Application, ApplicationWindow, Box, Button, CenterBox, Orientation, Separator,
+    prelude::{BoxExt, ButtonExt, GtkApplicationExt, GtkWindowExt, MonitorExt, WidgetExt},
 };
 
-use super::{window::{window, Anchor, WindowProperties}, PerMonitorWidgetProperties};
+use crate::WINDOW_IDS;
+
+use super::{
+    PerMonitorWidget,
+    quick_settings::QUICK_SETTINGS_WINDOW_TITLE,
+    symbolic_icon::symbolic_icon,
+    window::{Anchor, LayershellWindow},
+};
+
+pub fn quick_settings_toggle(application: Application) -> Button {
+    let button = Button::builder()
+        .name("quick-settings-toggle")
+        .css_classes(["icon-container", "hoverable"])
+        .build();
+
+    button.connect_clicked(move |_| {
+        let ids = WINDOW_IDS.read().unwrap();
+        let quick_settings_id = ids.get(QUICK_SETTINGS_WINDOW_TITLE).unwrap();
+        let quick_settings_window = application.window_by_id(*quick_settings_id).unwrap();
+        quick_settings_window.set_visible(!quick_settings_window.is_visible());
+    });
+
+    let icon = symbolic_icon("settings-symbolic", 24);
+    button.set_child(Some(&icon));
+
+    button
+}
 
 pub fn sidebar(
-    PerMonitorWidgetProperties {
+    PerMonitorWidget {
         monitor,
         application,
-    }: PerMonitorWidgetProperties,
+    }: PerMonitorWidget,
 ) -> ApplicationWindow {
-    let window = window(
-        WindowProperties::builder()
-            .anchors(&[Anchor::Left, Anchor::Top, Anchor::Bottom])
-            .application(application)
-            .title(&format!("sidebar-{}", monitor.connector().unwrap()))
-            .monitor(monitor)
-            .auto_exclusive(true)
-            .build(),
-    );
+    let window: ApplicationWindow = LayershellWindow::builder()
+        .anchors(&[Anchor::Left, Anchor::Top, Anchor::Bottom])
+        .application(application)
+        .title(&format!("sidebar-{}", monitor.connector().unwrap()))
+        .monitor(monitor)
+        .auto_exclusive(true)
+        .build();
 
     let container = CenterBox::builder()
         .css_classes(["sidebar-container"])
         .name("sidebar-container")
         .orientation(Orientation::Vertical)
+        .build();
+
+    let upper_section = Box::builder()
+        .name("upper-widgets-section")
+        .orientation(Orientation::Vertical)
+        .valign(Align::Start)
         .build();
 
     let lower_section = Box::builder()
@@ -37,12 +67,21 @@ pub fn sidebar(
         .valign(Align::End)
         .build();
 
+    let quick_settings_toggle = quick_settings_toggle(application.clone());
+    let lower_separator = Separator::builder()
+        .orientation(Orientation::Vertical)
+        .name("lower-widgets-seperator")
+        .build();
+    let battery = battery::Battery::builder().build();
+
+    lower_section.append(&quick_settings_toggle);
+    lower_section.append(&lower_separator);
     let battery_available = BATTERY_SERVICE.with(|service| service.available());
     if battery_available {
-        let battery = battery::battery(battery::BatteryProperties::builder().build());
         lower_section.append(&battery);
     }
 
+    container.set_start_widget(Some(&upper_section));
     container.set_end_widget(Some(&lower_section));
 
     window.set_child(Some(&container));

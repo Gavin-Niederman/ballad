@@ -41,12 +41,18 @@ impl BatteryLevel {
 }
 
 #[derive(Debug, TypedBuilder, Clone, PartialEq, Eq)]
-pub struct BatteryProperties {
+#[builder(build_method(into = Box))]
+pub struct Battery {
     #[builder(default = crate::widgets::Orientation::Vertical)]
-    orientation: crate::widgets::Orientation,
+    pub orientation: crate::widgets::Orientation,
+}
+impl From<Battery> for Box {
+    fn from(props: Battery) -> Self {
+        battery(props)
+    }
 }
 
-pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
+pub fn battery(Battery { orientation }: Battery) -> Box {
     let container = Box::builder()
         .orientation(orientation.clone().into())
         .name("battery-container")

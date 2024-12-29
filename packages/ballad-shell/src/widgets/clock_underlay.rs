@@ -15,8 +15,8 @@ use gtk::{ApplicationWindow, Box};
 
 use super::window::Anchor;
 use super::{
-    PerMonitorWidgetProperties,
-    window::{Layer, WindowProperties, window},
+    PerMonitorWidget,
+    window::{Layer, LayershellWindow},
 };
 
 fn formatted_time() -> String {
@@ -25,24 +25,22 @@ fn formatted_time() -> String {
 }
 fn formatted_date() -> String {
     let date = chrono::Local::now();
-    date.format("%A, %B %-d %-y").to_string()
+    date.format("%A, %B %-d, %-y").to_string()
 }
 
 pub fn clock_underlay(
-    PerMonitorWidgetProperties {
+    PerMonitorWidget {
         monitor,
         application,
-    }: PerMonitorWidgetProperties,
+    }: PerMonitorWidget,
 ) -> ApplicationWindow {
-    let window = window(
-        WindowProperties::builder()
-            .application(application)
-            .title(&format!("clock-underlay-{}", monitor.connector().unwrap()))
-            .monitor(monitor)
-            .layer(Layer::Bottom)
-            .anchors(&[Anchor::Bottom, Anchor::Right])
-            .build(),
-    );
+    let window: ApplicationWindow = LayershellWindow::builder()
+        .application(application)
+        .title(&format!("clock-underlay-{}", monitor.connector().unwrap()))
+        .monitor(monitor)
+        .layer(Layer::Bottom)
+        .anchors(&[Anchor::Bottom, Anchor::Right])
+        .build();
 
     let clock = Box::builder()
         .css_classes(["clock"])

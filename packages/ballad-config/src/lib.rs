@@ -5,11 +5,8 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(
-    feature = "gtk",
-    derive(glib::Enum),
-    enum_type(name = "CatppuccinFlavor")
-)]
+#[cfg_attr(feature = "gtk", derive(glib::Enum))]
+#[cfg_attr(feature = "gtk", enum_type(name = "CatppuccinFlavor"))]
 pub enum CatppuccinFlavor {
     Frappe,
     #[default]
@@ -19,15 +16,35 @@ pub enum CatppuccinFlavor {
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "gtk", derive(glib::Boxed), boxed_type(name = "ThemeConfig"))]
+#[cfg_attr(feature = "gtk", derive(glib::Boxed))]
+#[cfg_attr(feature = "gtk", boxed_type(name = "ThemeConfig"))]
 pub struct ThemeConfig {
     pub catppuccin_flavor: CatppuccinFlavor,
 }
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "gtk", derive(glib::Boxed), boxed_type(name = "ShellConfig"))]
+#[cfg_attr(feature = "gtk", derive(glib::Enum))]
+#[cfg_attr(feature = "gtk", enum_type(name = "PowerProfile"))]
+pub enum PowerProfile {
+    #[default]
+    Balanced,
+    HighPerformance,
+    PowerSaver,
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "gtk", derive(glib::Boxed))]
+#[cfg_attr(feature = "gtk", boxed_type(name = "PowerProfilesConfig"))]
+pub struct PowerProfilesConfig {
+    pub enabled: bool,
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "gtk", derive(glib::Boxed))]
+#[cfg_attr(feature = "gtk", boxed_type(name = "ShellConfig"))]
 pub struct ShellConfig {
     pub theme: ThemeConfig,
+    pub power_profiles: PowerProfilesConfig,
 }
 
 pub fn shell_config_path() -> PathBuf {

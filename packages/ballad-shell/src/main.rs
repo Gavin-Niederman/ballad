@@ -1,7 +1,7 @@
 mod style;
 mod widgets;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::{LazyLock, RwLock}};
 
 use gtk::{
     Application, CssProvider,
@@ -12,10 +12,10 @@ use gtk::{
 };
 use gtk::{gio, glib};
 use widgets::{
-    PerMonitorWidgetProperties,
-    clock_underlay::clock_underlay,
-    sidebar::{screen_bevels::screen_bevels, sidebar},
+    clock_underlay::clock_underlay, quick_settings::QuickSettings, sidebar::{screen_bevels::screen_bevels, sidebar}, PerMonitorWidget
 };
+
+static WINDOW_IDS: LazyLock<RwLock<HashMap<String, u32>>> = LazyLock::new(|| RwLock::new(HashMap::new()));
 
 fn main() {
     gio::resources_register_include!("icons.gresource").unwrap();
@@ -43,16 +43,37 @@ fn get_monitors() -> impl Iterator<Item = Monitor> {
 fn activate(app: &Application) {
     let monitors = get_monitors();
 
+    fn log_window(window: &gtk::ApplicationWindow) {
+        if let Some(title) = window.title() {
+            WINDOW_IDS.write().unwrap().insert(title.to_string(), window.id());
+        }
+    }
+
     monitors.for_each(|monitor| {
-        let properties = PerMonitorWidgetProperties::builder()
+        let properties: PerMonitorWidget = PerMonitorWidget::builder()
             .application(app)
             .monitor(monitor.clone())
             .build();
 
-        sidebar(properties.clone()).present();
-        screen_bevels(properties.clone()).present();
-        clock_underlay(properties).present();
+        let sidebar = sidebar(properties.clone());
+        log_window(&sidebar);
+        sidebar.present();
+
+        let screen_bevels = screen_bevels(properties.clone());
+        log_window(&screen_bevels);
+        screen_bevels.present();
+        
+        let clock_underlay = clock_underlay(properties);
+        log_window(&clock_underlay);
+        clock_underlay.present();
     });
+
+    let quick_settings = QuickSettings::builder()
+        .application(app)
+        .visible(true)
+        .build();
+    log_window(&quick_settings);
+    quick_settings.present();
 }
 
 fn startup(_app: &Application) {

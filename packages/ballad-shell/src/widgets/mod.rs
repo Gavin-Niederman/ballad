@@ -5,6 +5,7 @@ pub mod sidebar;
 pub mod window;
 pub mod symbolic_icon;
 pub mod clock_underlay;
+pub mod quick_settings;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Orientation {
@@ -21,7 +22,7 @@ impl From<Orientation> for gtk::Orientation {
 }
 
 #[derive(Debug, TypedBuilder, Clone, PartialEq, Eq)]
-pub struct PerMonitorWidgetProperties<'a> {
+pub struct PerMonitorWidget<'a> {
     pub monitor: Monitor,
     pub application: &'a Application,
 }

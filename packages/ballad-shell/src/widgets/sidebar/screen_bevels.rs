@@ -5,22 +5,23 @@ use gtk::{
 };
 use gtk4_layer_shell::{KeyboardMode, LayerShell};
 
-use crate::widgets::{window::{window, Anchor, WindowProperties}, PerMonitorWidgetProperties};
+use crate::widgets::{
+    PerMonitorWidget,
+    window::{Anchor, LayershellWindow},
+};
 
 pub fn screen_bevels(
-    PerMonitorWidgetProperties {
+    PerMonitorWidget {
         monitor,
         application,
-    }: PerMonitorWidgetProperties,
+    }: PerMonitorWidget,
 ) -> ApplicationWindow {
-    let window = window(
-        WindowProperties::builder()
-            .anchors(&[Anchor::Left, Anchor::Right, Anchor::Top, Anchor::Bottom])
-            .application(application)
-            .title(&format!("screen-bevels-{}", monitor.connector().unwrap()))
-            .monitor(monitor)
-            .build(),
-    );
+    let window: ApplicationWindow = LayershellWindow::builder()
+        .anchors(&[Anchor::Left, Anchor::Right, Anchor::Top, Anchor::Bottom])
+        .application(application)
+        .title(&format!("screen-bevels-{}", monitor.connector().unwrap()))
+        .monitor(monitor)
+        .build();
     window.set_hexpand(true);
     window.set_vexpand(true);
     window.set_css_classes(&["screen-bevels"]);
