@@ -17,9 +17,17 @@
             pkg-config
             dart-sass
             glib
+            gdk-pixbuf
+            librsvg
           ];
           LD_LIBRARY_PATH = with pkgs;
-            pkgs.lib.makeLibraryPath [ gtk4 gtk4-layer-shell glib ];
+            pkgs.lib.makeLibraryPath [
+              gtk4
+              gtk4-layer-shell
+              glib
+              gdk-pixbuf
+              librsvg
+            ];
         };
       });
 }

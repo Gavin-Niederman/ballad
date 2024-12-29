@@ -1,6 +1,9 @@
 use ballad_services::battery::{BATTERY_SERVICE, BatteryService};
+use gtk::gdk::Texture;
+use gtk::gdk_pixbuf::Pixbuf;
+use gtk::gio::{ResourceLookupFlags, resources_lookup_data};
 use gtk::glib::closure_local;
-use gtk::prelude::BoxExt;
+use gtk::prelude::{BoxExt, WidgetExt};
 use gtk::{Box, Stack, StackTransitionType, gio::Icon, glib::clone, prelude::ObjectExt};
 use gtk::{IconSize, Image, Label, LevelBar, glib};
 use typed_builder::TypedBuilder;
@@ -41,7 +44,7 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
         .css_classes(["battery"])
         .build();
 
-    let icon = Stack::builder()
+    let icon_stack = Stack::builder()
         .transition_type(StackTransitionType::SlideUp)
         .build();
 
@@ -70,12 +73,13 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
         .pixel_size(24)
         .build();
 
-    icon.add_named(&critical_icon, Some("critical"));
-    icon.add_named(&low_icon, Some("low"));
-    icon.add_named(&medium_icon, Some("medium"));
-    icon.add_named(&high_icon, Some("high"));
-    icon.add_named(&full_icon, Some("full"));
-    icon.add_named(&charging_icon, Some("charging"));
+    icon_stack.add_named(&critical_icon, Some("critical"));
+    icon_stack.add_named(&low_icon, Some("low"));
+    icon_stack.add_named(&medium_icon, Some("medium"));
+    icon_stack.add_named(&high_icon, Some("high"));
+    icon_stack.add_named(&full_icon, Some("full"));
+    icon_stack.add_named(&charging_icon, Some("charging"));
+    icon_stack.set_visible_child_name("critical");
 
     let percent_label = Label::builder().css_classes(["percent-display"]).build();
 
@@ -87,14 +91,14 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
 
     BATTERY_SERVICE.with(clone!(
         #[weak]
-        icon,
+        icon_stack,
         #[weak]
         percent_label,
         #[weak]
         battery_bar,
         move |service| {
             service
-                .bind_property("percentage", &icon, "visible-child-name")
+                .bind_property("percentage", &icon_stack, "visible-child-name")
                 .transform_to(|_, percent: f64| {
                     let level = BatteryLevel::from_percent(percent);
                     match level {
@@ -148,7 +152,7 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
         }
     ));
 
-    container.append(&icon);
+    container.append(&icon_stack);
     container.append(&percent_label);
     container.append(&battery_bar);
 

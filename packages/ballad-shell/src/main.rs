@@ -1,15 +1,19 @@
 mod widgets;
 
-use gtk::glib;
+use gtk::gdk::Display;
+use gtk::gio::Resource;
 use gtk::{
     Application, IconTheme,
     gdk::{self, Monitor},
     glib::closure_local,
     prelude::*,
 };
+use gtk::{IconLookupFlags, Image, gio, glib};
 use widgets::sidebar::{SideBarProperties, sidebar};
 
 fn main() {
+    gio::resources_register_include!("icons.gresource").unwrap();
+
     let app = Application::builder()
         .application_id("com.gavinniederman.ballad-shell")
         .build();
@@ -64,5 +68,15 @@ fn startup(_app: &Application) {
         });
     });
 
-    IconTheme::default().add_search_path("assets/icons");
+    // println!(
+    //     "Icon theme path: {:?}",
+    //     theme.lookup_icon(
+    //         "filebrowser-welcome-symbolic",
+    //         &[],
+    //         16,
+    //         1,
+    //         gtk::TextDirection::Ltr,
+    //         IconLookupFlags::empty()
+    //     ).icon_name()
+    // );
 }

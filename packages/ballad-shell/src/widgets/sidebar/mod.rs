@@ -2,7 +2,9 @@ pub mod battery;
 
 use ballad_services::battery::BATTERY_SERVICE;
 use gtk::{
-    gdk::Monitor, prelude::{BoxExt, GtkWindowExt, MonitorExt, OrientableExt, WidgetExt}, Align, Application, ApplicationWindow, Box, CenterBox, Orientation
+    Align, Application, ApplicationWindow, Box, CenterBox, Orientation,
+    gdk::Monitor,
+    prelude::{BoxExt, GtkWindowExt, MonitorExt, OrientableExt, WidgetExt},
 };
 use typed_builder::TypedBuilder;
 
@@ -43,10 +45,7 @@ pub fn sidebar(
 
     let battery_available = BATTERY_SERVICE.with(|service| service.available());
     if battery_available {
-        let battery = battery::battery(
-            battery::BatteryProperties::builder()
-                .build(),
-        );
+        let battery = battery::battery(battery::BatteryProperties::builder().build());
         lower_section.append(&battery);
     }
 

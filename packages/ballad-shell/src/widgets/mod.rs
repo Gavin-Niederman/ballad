@@ -1,5 +1,5 @@
-pub mod window;
 pub mod sidebar;
+pub mod window;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Orientation {
