@@ -1,0 +1,81 @@
+window {
+    background: transparent;
+}
+
+window,
+window > * {
+    transition:
+        background-color 0.2s,
+        box-shadow 0.2s;
+}
+
+separator {
+    border-top: 2px solid $sky;
+
+    &.vertical {
+        margin-top: 8px;
+        margin-bottom: 8px;
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+
+    &.horizontal {
+        margin-left: 8px;
+        margin-right: 8px;
+    }
+}
+
+$slider-size: 16px;
+
+scale {
+    trough {
+        background-color: $surface-0;
+        border-radius: $ui-radius;
+    }
+}
+
+levelbar,
+scale {
+    border-radius: $ui-radius;
+
+    &.vertical {
+        trough {
+            min-height: 64px;
+        }
+
+        highlight {
+            min-width: $slider-size;
+        }
+    }
+
+    &.horizontal {
+        trough {
+            min-width: 64px;
+        }
+
+        highlight {
+            min-height: $slider-size;
+        }
+    }
+
+    .filled,
+    highlight {
+        border-radius: $slider-size;
+        background-color: $sky;
+    }
+
+    .empty {
+        border-radius: $ui-radius;
+        background-color: $surface-0;
+    }
+}
+
+menu {
+    background-color: $surface-0;
+    padding: 8px;
+    border-radius: $ui-radius;
+}
+
+* {
+    all: unset;
+}

@@ -1,0 +1,97 @@
+.quick-settings-container {
+    margin: 12px;
+    background-color: $mantle;
+    padding: 16px;
+    border-radius: $corner-radius;
+    border: 4px solid $sky;
+
+    font-family: "Lato", sans-serif;
+    font-size: 1.1rem;
+
+    scale.horizontal trough {
+        min-width: 120px;
+    }
+
+    .slider-row {
+        image {
+            margin-right: 4px;
+        }
+    }
+
+    > :not(:last-child):not(.dummy) {
+        margin-bottom: 16px;
+    }
+}
+
+.toggle-button {
+    &.toggled {
+        background-color: $sky;
+    }
+
+    background-color: $surface-0;
+    transition: $transition;
+
+    border-radius: $ui-radius;
+
+    &:not(.toggled) .toggle-button-child {
+        color: $text;
+    }
+
+    &:not(.toggled) .toggle-button-child:hover {
+        color: $base;
+    }
+
+    &.dropped .toggle-button-child {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .toggle-button-child {
+        color: $base;
+        transition: $transition;
+        padding: 8px;
+
+        &:hover {
+            background-color: $lavender;
+        }
+    }
+
+    .toggle-button-dropdown.dropped image {
+        -gtk-icon-transform: rotate(90deg);
+    }
+
+    :first-child {
+        border-top-left-radius: $ui-radius;
+        border-bottom-left-radius: $ui-radius;
+    }
+
+    :last-child {
+        border-top-right-radius: $ui-radius;
+        border-bottom-right-radius: $ui-radius;
+    }
+
+    .revealer-content-container {
+        box-shadow: inset 0px 10px 8px -4px transparentize(#000, 0.75);
+        background-color: $surface-0;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        padding: 8px;
+    }
+}
+
+.toggle-button-dropdown-option {
+    transition: $transition;
+    color: $text;
+
+    &:hover {
+        color: $sky;
+    }
+
+    &.active {
+        color: $sky;
+    }
+}
+
+.power-profile-label {
+    min-width: 128px;
+}

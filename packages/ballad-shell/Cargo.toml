@@ -9,6 +9,7 @@ gtk4-layer-shell = "0.4.0"
 typed-builder = "0.20.0"
 ballad-services = { path = "../ballad-services" }
 ballad-config = { path = "../ballad-config" }
+grass = { version = "0.13.4", default-features = false }
 
 [build-dependencies]
 glib-build-tools = "0.20.0"

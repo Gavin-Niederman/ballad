@@ -1,0 +1,16 @@
+.logout-menu {
+    background-color: transparentize(#000, 0.5);
+}
+
+.logout-menu-option {
+    background-color: $base;
+    color: $text;
+    border-radius: $corner-radius;
+    padding: 16px;
+    transition: $transition;
+
+    &:hover {
+        background-color: $sky;
+        color: $base;
+    }
+}

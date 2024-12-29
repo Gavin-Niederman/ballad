@@ -1,9 +1,11 @@
 use ballad_services::battery::{BATTERY_SERVICE, BatteryService};
 use gtk::glib::{clone, closure_local};
-use gtk::prelude::BoxExt;
+use gtk::prelude::{BoxExt, WidgetExt};
 use gtk::{Box, Stack, StackTransitionType, prelude::ObjectExt};
-use gtk::{Image, Label, LevelBar, glib};
+use gtk::{Label, LevelBar, glib};
 use typed_builder::TypedBuilder;
+
+use crate::widgets::symbolic_icon::symbolic_icon;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BatteryLevel {
@@ -27,6 +29,15 @@ impl BatteryLevel {
             Self::Critical
         }
     }
+    pub fn as_class_name(&self) -> &'static str {
+        match self {
+            Self::Full => "full",
+            Self::High => "high",
+            Self::Medium => "medium",
+            Self::Low => "low",
+            Self::Critical => "critical",
+        }
+    }
 }
 
 #[derive(Debug, TypedBuilder, Clone, PartialEq, Eq)]
@@ -45,30 +56,12 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
         .transition_type(StackTransitionType::SlideUp)
         .build();
 
-    let critical_icon = Image::builder()
-        .icon_name("bat-critical-symbolic")
-        .pixel_size(24)
-        .build();
-    let low_icon = Image::builder()
-        .icon_name("bat-low-symbolic")
-        .pixel_size(24)
-        .build();
-    let medium_icon = Image::builder()
-        .icon_name("bat-medium-symbolic")
-        .pixel_size(24)
-        .build();
-    let high_icon = Image::builder()
-        .icon_name("bat-high-symbolic")
-        .pixel_size(24)
-        .build();
-    let full_icon = Image::builder()
-        .icon_name("bat-full-symbolic")
-        .pixel_size(24)
-        .build();
-    let charging_icon = Image::builder()
-        .icon_name("bat-charging-symbolic")
-        .pixel_size(24)
-        .build();
+    let critical_icon = symbolic_icon("bat-critical-symbolic", 24);
+    let low_icon = symbolic_icon("bat-low-symbolic", 24);
+    let medium_icon = symbolic_icon("bat-medium-symbolic", 24);
+    let high_icon = symbolic_icon("bat-high-symbolic", 24);
+    let full_icon = symbolic_icon("bat-full-symbolic", 24);
+    let charging_icon = symbolic_icon("bat-charging-symbolic", 24);
 
     icon_stack.add_named(&critical_icon, Some("critical"));
     icon_stack.add_named(&low_icon, Some("low"));
@@ -82,6 +75,7 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
 
     let battery_bar = LevelBar::builder()
         .orientation(orientation.into())
+        .css_classes(["battery-bar", "vertical"])
         .inverted(true)
         .mode(gtk::LevelBarMode::Continuous)
         .build();
@@ -98,13 +92,7 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
                 .bind_property("percentage", &icon_stack, "visible-child-name")
                 .transform_to(|_, percent: f64| {
                     let level = BatteryLevel::from_percent(percent);
-                    match level {
-                        BatteryLevel::Full => Some("full"),
-                        BatteryLevel::High => Some("high"),
-                        BatteryLevel::Medium => Some("medium"),
-                        BatteryLevel::Low => Some("low"),
-                        BatteryLevel::Critical => Some("critical"),
-                    }
+                    Some(level.as_class_name())
                 })
                 .sync_create()
                 .build();
@@ -115,37 +103,35 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
                 .sync_create()
                 .build();
 
+            fn bar_classes(battery: &BatteryService) -> Vec<&'static str> {
+                let mut class_names = vec!["battery-bar", "vertical"];
+                let percent = battery.percentage();
+                let level = BatteryLevel::from_percent(percent);
+                class_names.push(level.as_class_name());
+                if battery.charging() {
+                    class_names.push("charging");
+                }
+                class_names
+            }
+
             service.connect_closure(
                 "battery-changed",
                 false,
-                closure_local!(move |battery: BatteryService| {
-                    let mut class_names = Vec::new();
-                    let percent = battery.percentage();
-                    let level = BatteryLevel::from_percent(percent);
-                    match level {
-                        BatteryLevel::Full => {
-                            class_names.push("full");
-                        }
-                        BatteryLevel::High => {
-                            class_names.push("high");
-                        }
-                        BatteryLevel::Medium => {
-                            class_names.push("medium");
-                        }
-                        BatteryLevel::Low => {
-                            class_names.push("low");
-                        }
-                        BatteryLevel::Critical => {
-                            class_names.push("critical");
-                        }
-                    }
-                    if battery.charging() {
-                        class_names.push("charging");
-                    }
+                closure_local!(
+                    #[weak]
+                    battery_bar,
+                    move |battery: BatteryService| {
+                        let class_names = bar_classes(&battery);
 
-                    battery_bar.set_value(percent / 100.0);
-                }),
+                        battery_bar.set_css_classes(&class_names);
+                        battery_bar.set_value(battery.percentage() / 100.0);
+                    }
+                ),
             );
+
+            let class_names = bar_classes(service);
+            battery_bar.set_css_classes(&class_names);
+            battery_bar.set_value(service.percentage() / 100.0);
         }
     ));
 

@@ -1,0 +1,19 @@
+.volume-slider {
+    &.vertical trough {
+        margin-bottom: 8px;
+    }
+    &.horizontal trough {
+        margin-left: 4px;
+    }
+    &.muted trough highlight {
+        background-color: $surface-1;
+    }
+}
+
+image.symbolic {
+    transition: $transition;
+    color: $text;
+}
+.icon-container.hoverable:hover image.symbolic {
+    color: $sky;
+}

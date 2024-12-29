@@ -18,10 +18,16 @@ pub enum CatppuccinFlavor {
     Latte,
 }
 
-#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "gtk", derive(glib::Boxed), boxed_type(name = "ThemeConfig"))]
+pub struct ThemeConfig {
+    pub catppuccin_flavor: CatppuccinFlavor,
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "gtk", derive(glib::Boxed), boxed_type(name = "ShellConfig"))]
 pub struct ShellConfig {
-    pub catppuccin_flavor: CatppuccinFlavor,
+    pub theme: ThemeConfig,
 }
 
 pub fn shell_config_path() -> PathBuf {

@@ -1,5 +1,6 @@
 pub mod sidebar;
 pub mod window;
+pub mod symbolic_icon;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Orientation {

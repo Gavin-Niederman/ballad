@@ -19,6 +19,7 @@
             glib
             gdk-pixbuf
             librsvg
+            cairo
           ];
           LD_LIBRARY_PATH = with pkgs;
             pkgs.lib.makeLibraryPath [
@@ -27,6 +28,7 @@
               glib
               gdk-pixbuf
               librsvg
+              cairo
             ];
         };
       });

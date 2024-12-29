@@ -6,7 +6,7 @@ mod imp {
     use std::cell::RefCell;
     use std::sync::OnceLock;
 
-    use ballad_config::ShellConfig;
+    use ballad_config::{ShellConfig, ThemeConfig};
     use gtk::gio::Cancellable;
     use gtk::glib::clone;
     use gtk::glib::subclass::Signal;
@@ -17,17 +17,19 @@ mod imp {
     #[properties(wrapper_type = super::ConfigService)]
     pub struct ConfigService {
         #[property(get)]
-        config_path: RefCell<String>,
+        shell_config_path: RefCell<String>,
 
         #[property(
             type = ShellConfig,
-            name = "config",
+            name = "shell-config",
             get = |_| ballad_config::get_or_init_shell_config(),
             set = |_, val| ballad_config::set_shell_config(val)
         )]
-        _config: (),
+        _shell_config: (),
 
-        watcher: RefCell<Option<gio::FileMonitor>>,
+        last_config: RefCell<ShellConfig>,
+
+        shell_config_watcher: RefCell<Option<gio::FileMonitor>>,
     }
 
     #[glib::object_subclass]
@@ -41,35 +43,50 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
 
-            let config_path: String = ballad_config::shell_config_path().to_string_lossy().into();
-            self.config_path.replace(config_path.clone());
+            let shell_config_path: String =
+                ballad_config::shell_config_path().to_string_lossy().into();
+            self.shell_config_path.replace(shell_config_path.clone());
 
-            let file = gio::File::for_path(&config_path);
-            let watcher = file
+            let shell_config_file = gio::File::for_path(&shell_config_path);
+            let shell_config_watcher = shell_config_file
                 .monitor(gio::FileMonitorFlags::NONE, Cancellable::NONE)
                 .unwrap();
 
-            watcher.connect_changed(clone!(
+            self.last_config.replace(self.obj().shell_config());
+
+            shell_config_watcher.connect_changed(clone!(
                 #[weak(rename_to = this)]
                 self,
                 move |_, _, _, event| {
                     if event == gio::FileMonitorEvent::ChangesDoneHint {
-                        let config = this.obj().config();
-                        this.obj().emit_by_name::<()>("config-changed", &[&config]);
-                        this.obj().notify_config();
+                        let config = this.obj().shell_config();
+                        this.obj()
+                            .emit_by_name::<()>("shell-config-changed", &[&config]);
+
+                        if config.theme != this.last_config.borrow().theme {
+                            this.obj().emit_by_name::<()>("shell-theme-config-changed", &[&config.theme]);
+                        }
+
+                        this.obj().notify_shell_config();
+
+                        this.last_config.replace(config);
                     }
                 }
             ));
 
-            self.watcher.replace(Some(watcher));
+            self.shell_config_watcher
+                .replace(Some(shell_config_watcher));
         }
 
         fn signals() -> &'static [Signal] {
             static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
             SIGNALS.get_or_init(|| {
                 vec![
-                    Signal::builder("config-changed")
+                    Signal::builder("shell-config-changed")
                         .param_types([ShellConfig::static_type()])
+                        .build(),
+                    Signal::builder("shell-theme-config-changed")
+                        .param_types([ThemeConfig::static_type()])
                         .build(),
                 ]
             })

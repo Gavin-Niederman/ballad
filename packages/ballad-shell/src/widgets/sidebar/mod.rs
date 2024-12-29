@@ -1,4 +1,5 @@
 pub mod battery;
+pub mod screen_bevels;
 
 use ballad_services::battery::BATTERY_SERVICE;
 use gtk::{
@@ -31,6 +32,7 @@ pub fn sidebar(
             .application(application)
             .title(&format!("sidebar-{}", monitor.connector().unwrap()))
             .monitor(monitor)
+            .auto_exclusive(true)
             .build(),
     );
 
