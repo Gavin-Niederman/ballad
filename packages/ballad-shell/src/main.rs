@@ -11,7 +11,11 @@ use gtk::{
     style_context_add_provider_for_display, style_context_remove_provider_for_display,
 };
 use gtk::{gio, glib};
-use widgets::sidebar::{screen_bevels::{screen_bevels, ScreenBevelsProperties}, sidebar, SideBarProperties};
+use widgets::{
+    PerMonitorWidgetProperties,
+    clock_underlay::clock_underlay,
+    sidebar::{screen_bevels::screen_bevels, sidebar},
+};
 
 fn main() {
     gio::resources_register_include!("icons.gresource").unwrap();
@@ -40,29 +44,19 @@ fn activate(app: &Application) {
     let monitors = get_monitors();
 
     monitors.for_each(|monitor| {
-        sidebar(
-            SideBarProperties::builder()
-                .application(app)
-                .monitor(monitor.clone())
-                .build(),
-        ).present();
-        screen_bevels(
-            ScreenBevelsProperties::builder()
-                .application(app)
-                .monitor(monitor)
-                .build(),
-        ).present();
+        let properties = PerMonitorWidgetProperties::builder()
+            .application(app)
+            .monitor(monitor.clone())
+            .build();
+
+        sidebar(properties.clone()).present();
+        screen_bevels(properties.clone()).present();
+        clock_underlay(properties).present();
     });
 }
 
 fn startup(_app: &Application) {
     watch_theme_config();
-
-    ballad_services::battery::BATTERY_SERVICE.with(|battery_service| {
-        battery_service.connect_charging_notify(|service| {
-            println!("Battery percentage: {}", service.percentage());
-        });
-    });
 }
 
 fn watch_theme_config() {

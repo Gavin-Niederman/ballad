@@ -7,7 +7,8 @@ const EXTRA_SCSS: &str = "
 
 $corner-radius: 16px;
 $ui-radius: 8px;
-$transition: all 0.2s;
+$transition-length: 0.2s;
+$transition: all $transition-length;
 ";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -22,9 +22,10 @@ impl From<Anchor> for gtk4_layer_shell::Edge {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Layer {
+    Overlay,
     Top,
     Bottom,
-    Overlay,
+    Background,
 }
 impl From<Layer> for gtk4_layer_shell::Layer {
     fn from(layer: Layer) -> Self {
@@ -32,6 +33,7 @@ impl From<Layer> for gtk4_layer_shell::Layer {
             Layer::Top => gtk4_layer_shell::Layer::Top,
             Layer::Bottom => gtk4_layer_shell::Layer::Bottom,
             Layer::Overlay => gtk4_layer_shell::Layer::Overlay,
+            Layer::Background => gtk4_layer_shell::Layer::Background,
         }
     }
 }

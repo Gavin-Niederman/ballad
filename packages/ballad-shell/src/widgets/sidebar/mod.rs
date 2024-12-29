@@ -3,28 +3,17 @@ pub mod screen_bevels;
 
 use ballad_services::battery::BATTERY_SERVICE;
 use gtk::{
-    Align, Application, ApplicationWindow, Box, CenterBox, Orientation,
-    gdk::Monitor,
-    prelude::{BoxExt, GtkWindowExt, MonitorExt, OrientableExt, WidgetExt},
+    Align, ApplicationWindow, Box, CenterBox, Orientation,
+    prelude::{BoxExt, GtkWindowExt, MonitorExt},
 };
-use typed_builder::TypedBuilder;
 
-use super::window::{Anchor, WindowProperties, window};
-
-#[derive(Debug, TypedBuilder, Clone, PartialEq, Eq)]
-#[builder(field_defaults(default))]
-pub struct SideBarProperties<'a> {
-    #[builder(!default)]
-    pub monitor: Monitor,
-    #[builder(!default)]
-    pub application: &'a Application,
-}
+use super::{window::{window, Anchor, WindowProperties}, PerMonitorWidgetProperties};
 
 pub fn sidebar(
-    SideBarProperties {
+    PerMonitorWidgetProperties {
         monitor,
         application,
-    }: SideBarProperties,
+    }: PerMonitorWidgetProperties,
 ) -> ApplicationWindow {
     let window = window(
         WindowProperties::builder()
@@ -36,11 +25,14 @@ pub fn sidebar(
             .build(),
     );
 
-    let container = CenterBox::new();
-    container.set_orientation(Orientation::Vertical);
-    container.set_css_classes(&["sidebar-container"]);
+    let container = CenterBox::builder()
+        .css_classes(["sidebar-container"])
+        .name("sidebar-container")
+        .orientation(Orientation::Vertical)
+        .build();
 
     let lower_section = Box::builder()
+        .name("lower-widgets-section")
         .orientation(Orientation::Vertical)
         .valign(Align::End)
         .build();

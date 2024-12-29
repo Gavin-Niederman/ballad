@@ -1,28 +1,17 @@
 use gtk::{
-    Application, ApplicationWindow, Box, StateFlags,
-    cairo::{self, RectangleInt, Region},
-    gdk::Monitor,
+    ApplicationWindow, Box,
+    cairo::{RectangleInt, Region},
     prelude::*,
 };
 use gtk4_layer_shell::{KeyboardMode, LayerShell};
-use typed_builder::TypedBuilder;
 
-use crate::widgets::window::{Anchor, WindowProperties, window};
-
-#[derive(Debug, TypedBuilder, Clone, PartialEq, Eq)]
-#[builder(field_defaults(default))]
-pub struct ScreenBevelsProperties<'a> {
-    #[builder(!default)]
-    pub monitor: Monitor,
-    #[builder(!default)]
-    pub application: &'a Application,
-}
+use crate::widgets::{window::{window, Anchor, WindowProperties}, PerMonitorWidgetProperties};
 
 pub fn screen_bevels(
-    ScreenBevelsProperties {
+    PerMonitorWidgetProperties {
         monitor,
         application,
-    }: ScreenBevelsProperties,
+    }: PerMonitorWidgetProperties,
 ) -> ApplicationWindow {
     let window = window(
         WindowProperties::builder()

@@ -5,8 +5,8 @@ window {
 window,
 window > * {
     transition:
-        background-color 0.2s,
-        box-shadow 0.2s;
+        background-color $transition-length,
+        box-shadow $transition-length;
 }
 
 separator {
@@ -37,6 +37,8 @@ scale {
 levelbar,
 scale {
     border-radius: $ui-radius;
+    transition:
+        background-color $transition-length;
 
     &.vertical {
         trough {

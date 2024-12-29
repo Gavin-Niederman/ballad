@@ -49,19 +49,27 @@ pub struct BatteryProperties {
 pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
     let container = Box::builder()
         .orientation(orientation.clone().into())
+        .name("battery-container")
         .css_classes(["battery"])
         .build();
 
     let icon_stack = Stack::builder()
         .transition_type(StackTransitionType::SlideUp)
+        .name("battery-icon-stack")
         .build();
 
     let critical_icon = symbolic_icon("bat-critical-symbolic", 24);
+    critical_icon.set_widget_name("battery-critical-icon");
     let low_icon = symbolic_icon("bat-low-symbolic", 24);
+    low_icon.set_widget_name("battery-low-icon");
     let medium_icon = symbolic_icon("bat-medium-symbolic", 24);
+    medium_icon.set_widget_name("battery-medium-icon");
     let high_icon = symbolic_icon("bat-high-symbolic", 24);
+    high_icon.set_widget_name("battery-high-icon");
     let full_icon = symbolic_icon("bat-full-symbolic", 24);
+    full_icon.set_widget_name("battery-full-icon");
     let charging_icon = symbolic_icon("bat-charging-symbolic", 24);
+    charging_icon.set_widget_name("battery-charging-icon");
 
     icon_stack.add_named(&critical_icon, Some("critical"));
     icon_stack.add_named(&low_icon, Some("low"));
@@ -69,13 +77,16 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
     icon_stack.add_named(&high_icon, Some("high"));
     icon_stack.add_named(&full_icon, Some("full"));
     icon_stack.add_named(&charging_icon, Some("charging"));
-    icon_stack.set_visible_child_name("critical");
 
-    let percent_label = Label::builder().css_classes(["percent-display"]).build();
+    let percent_label = Label::builder()
+        .name("battery-percent-display")
+        .css_classes(["percent-display"])
+        .build();
 
     let battery_bar = LevelBar::builder()
         .orientation(orientation.into())
         .css_classes(["battery-bar", "vertical"])
+        .name("battery-bar")
         .inverted(true)
         .mode(gtk::LevelBarMode::Continuous)
         .build();
@@ -132,6 +143,9 @@ pub fn battery(BatteryProperties { orientation }: BatteryProperties) -> Box {
             let class_names = bar_classes(service);
             battery_bar.set_css_classes(&class_names);
             battery_bar.set_value(service.percentage() / 100.0);
+            icon_stack.set_visible_child_name(
+                BatteryLevel::from_percent(service.percentage()).as_class_name(),
+            );
         }
     ));
 
