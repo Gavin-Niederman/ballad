@@ -1,11 +1,8 @@
 use ballad_services::battery::{BATTERY_SERVICE, BatteryService};
-use gtk::gdk::Texture;
-use gtk::gdk_pixbuf::Pixbuf;
-use gtk::gio::{ResourceLookupFlags, resources_lookup_data};
-use gtk::glib::closure_local;
-use gtk::prelude::{BoxExt, WidgetExt};
-use gtk::{Box, Stack, StackTransitionType, gio::Icon, glib::clone, prelude::ObjectExt};
-use gtk::{IconSize, Image, Label, LevelBar, glib};
+use gtk::glib::{clone, closure_local};
+use gtk::prelude::BoxExt;
+use gtk::{Box, Stack, StackTransitionType, prelude::ObjectExt};
+use gtk::{Image, Label, LevelBar, glib};
 use typed_builder::TypedBuilder;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

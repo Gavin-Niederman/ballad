@@ -1,14 +1,12 @@
 mod widgets;
 
-use gtk::gdk::Display;
-use gtk::gio::Resource;
 use gtk::{
-    Application, IconTheme,
+    Application,
     gdk::{self, Monitor},
     glib::closure_local,
     prelude::*,
 };
-use gtk::{IconLookupFlags, Image, gio, glib};
+use gtk::{gio, glib};
 use widgets::sidebar::{SideBarProperties, sidebar};
 
 fn main() {
@@ -67,16 +65,4 @@ fn startup(_app: &Application) {
             println!("Battery percentage: {}", service.percentage());
         });
     });
-
-    // println!(
-    //     "Icon theme path: {:?}",
-    //     theme.lookup_icon(
-    //         "filebrowser-welcome-symbolic",
-    //         &[],
-    //         16,
-    //         1,
-    //         gtk::TextDirection::Ltr,
-    //         IconLookupFlags::empty()
-    //     ).icon_name()
-    // );
 }
