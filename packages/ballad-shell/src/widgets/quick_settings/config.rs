@@ -1,7 +1,4 @@
-use std::{
-    cell::{Cell, LazyCell},
-    rc::Rc,
-};
+use std::cell::LazyCell;
 
 use ballad_config::{CatppuccinFlavor, ShellConfig, ThemeConfig};
 use ballad_services::{
@@ -13,18 +10,14 @@ use gtk::{
     prelude::ObjectExt,
 };
 
-pub fn on_theme_button_press() -> impl Fn(bool) + 'static {
+pub fn on_theme_button_press(retained_dark_flavor: Variable) -> impl Fn(bool) + 'static {
     CONFIG_SERVICE.with(|config_service| {
         let config_service = LazyCell::force(config_service).clone();
 
         move |dark: bool| {
             let current_config = config_service.shell_config();
 
-            let retained_dark_flavor = Rc::new(Cell::new(CatppuccinFlavor::default()));
             if !dark {
-                let current_flavor = current_config.theme.catppuccin_flavor;
-                retained_dark_flavor.set(current_flavor);
-
                 config_service.set_shell_config(ShellConfig {
                     theme: ThemeConfig {
                         catppuccin_flavor: CatppuccinFlavor::Latte,
@@ -34,7 +27,7 @@ pub fn on_theme_button_press() -> impl Fn(bool) + 'static {
             } else {
                 config_service.set_shell_config(ShellConfig {
                     theme: ThemeConfig {
-                        catppuccin_flavor: retained_dark_flavor.get(),
+                        catppuccin_flavor: retained_dark_flavor.value_typed().unwrap(),
                     },
                     ..current_config
                 });

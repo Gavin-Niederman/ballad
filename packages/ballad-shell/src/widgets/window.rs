@@ -1,8 +1,4 @@
-use gtk::{
-    Application, ApplicationWindow,
-    gdk::Monitor,
-    prelude::GtkWindowExt,
-};
+use gtk::{Application, ApplicationWindow, gdk::Monitor, prelude::GtkWindowExt};
 use gtk4_layer_shell::LayerShell;
 use typed_builder::TypedBuilder;
 

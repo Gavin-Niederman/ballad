@@ -1,14 +1,13 @@
-pub mod config;
-pub mod dropdown_button;
+mod config;
+mod dropdown_button;
+mod flavor;
 
 use super::window::{Layer, LayershellWindow};
-use config::{dark_theme_toggle_variable, on_theme_button_press};
-use dropdown_button::DropdownButton;
+use flavor::flavor_selector;
+use gtk::gdk::Key;
+use gtk::glib;
 use gtk::{
-    Align, ApplicationWindow, Box, EventControllerKey, GestureClick, Image, Label, Orientation,
-    Overlay,
-    gdk::Key,
-    glib::{self, clone},
+    ApplicationWindow, Box, EventControllerKey, GestureClick, Orientation, Overlay, glib::clone,
     prelude::*,
 };
 use gtk4_layer_shell::{KeyboardMode, LayerShell};
@@ -19,8 +18,6 @@ pub const QUICK_SETTINGS_WINDOW_TITLE: &str = "quick-settings";
 #[derive(Debug, Clone, TypedBuilder, PartialEq, Eq)]
 #[builder(build_method(into = ApplicationWindow))]
 pub struct QuickSettings<'a> {
-    #[builder(default = false)]
-    pub visible: bool,
     pub application: &'a gtk::Application,
 }
 impl From<QuickSettings<'_>> for ApplicationWindow {
@@ -31,7 +28,6 @@ impl From<QuickSettings<'_>> for ApplicationWindow {
 
 pub fn quick_settings(
     QuickSettings {
-        visible,
         application,
     }: QuickSettings,
 ) -> ApplicationWindow {
@@ -41,7 +37,6 @@ pub fn quick_settings(
         .title(QUICK_SETTINGS_WINDOW_TITLE)
         .build();
     window.set_keyboard_mode(KeyboardMode::OnDemand);
-    window.set_visible(visible);
 
     let kbd_exit = EventControllerKey::builder()
         .name("close-quick-settings")
@@ -86,32 +81,7 @@ pub fn quick_settings(
         .css_classes(["quick-settings"])
         .build();
 
-    let toggled = dark_theme_toggle_variable();
-
-    let flavor_button_content = Box::builder()
-        .orientation(Orientation::Horizontal)
-        .halign(Align::Start)
-        .spacing(8)
-        .build();
-    flavor_button_content.append(
-        &Image::builder()
-            .icon_name("theme-symbolic")
-            .pixel_size(24)
-            .build(),
-    );
-    flavor_button_content.append(
-        &Label::builder()
-            .label("Dark Mode")
-            .vexpand(true)
-            .valign(Align::Center)
-            .build(),
-    );
-    let flavor_selector = DropdownButton::builder()
-        .on_toggle(on_theme_button_press())
-        .toggled(toggled)
-        .button_content(flavor_button_content)
-        .dropdown_content(Label::builder().label("DropC").build())
-        .build();
+    let flavor_selector = flavor_selector();
 
     quick_settings.append(&flavor_selector);
 

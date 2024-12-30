@@ -1,11 +1,11 @@
-use gtk::{gdk::Monitor, Application};
+use gtk::{Application, gdk::Monitor};
 use typed_builder::TypedBuilder;
 
-pub mod sidebar;
-pub mod window;
-pub mod symbolic_icon;
 pub mod clock_underlay;
 pub mod quick_settings;
+pub mod sidebar;
+pub mod symbolic_icon;
+pub mod window;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Orientation {

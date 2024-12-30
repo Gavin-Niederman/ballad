@@ -1,4 +1,5 @@
 mod style;
+pub mod utils;
 mod widgets;
 
 use std::{
@@ -83,10 +84,10 @@ fn activate(app: &Application) {
 
     let quick_settings = QuickSettings::builder()
         .application(app)
-        .visible(true)
         .build();
     log_window(&quick_settings);
     quick_settings.present();
+    quick_settings.set_visible(false);
 }
 
 fn startup(_app: &Application) {

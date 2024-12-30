@@ -64,7 +64,8 @@ mod imp {
                             .emit_by_name::<()>("shell-config-changed", &[&config]);
 
                         if config.theme != this.last_config.borrow().theme {
-                            this.obj().emit_by_name::<()>("shell-theme-config-changed", &[&config.theme]);
+                            this.obj()
+                                .emit_by_name::<()>("shell-theme-config-changed", &[&config.theme]);
                         }
 
                         this.obj().notify_shell_config();

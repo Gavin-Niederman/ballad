@@ -5,7 +5,7 @@ use gtk::{
     prelude::{FromVariant, ObjectExt},
 };
 
-#[derive(Debug, Default, Clone, PartialEq, Eq, glib::Boxed)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, glib::Boxed, glib::Variant)]
 #[boxed_type(name = "BalladServicesVariableInner")]
 pub struct VariableInner {
     pub value: Option<Variant>,

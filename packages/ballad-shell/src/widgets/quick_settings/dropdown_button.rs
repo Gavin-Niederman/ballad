@@ -6,6 +6,8 @@ use gtk::{
 };
 use typed_builder::TypedBuilder;
 
+use crate::utils::set_class_on_widget;
+
 #[derive(TypedBuilder)]
 #[builder(build_method(into = gtk::Box))]
 pub struct DropdownButton<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static> {
@@ -42,13 +44,7 @@ pub fn dropdown_button<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static>(
         clone!(
             #[weak]
             container,
-            move |_, toggled: bool| {
-                if toggled {
-                    container.add_css_class("toggled");
-                } else {
-                    container.remove_css_class("toggled");
-                }
-            }
+            move |_, toggled: bool| set_class_on_widget(toggled, &container, "toggled")
         ),
     );
     if toggled.value_typed().unwrap_or(false) {
@@ -94,11 +90,7 @@ pub fn dropdown_button<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static>(
         move |_| {
             let revealed = revealer.reveals_child();
             revealer.set_reveal_child(!revealed);
-            if revealed {
-                container.remove_css_class("dropped");
-            } else {
-                container.add_css_class("dropped");
-            }
+            set_class_on_widget(!revealed, &container, "dropped");
         }
     ));
     toggle_button.connect_clicked(clone!(
@@ -118,13 +110,7 @@ pub fn dropdown_button<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static>(
     revealer.connect_reveal_child_notify(clone!(
         #[weak]
         container,
-        move |revealer| {
-            if revealer.reveals_child() {
-                container.add_css_class("revealed");
-            } else {
-                container.remove_css_class("revealed");
-            }
-        }
+        move |revealer| set_class_on_widget(revealer.reveals_child(), &container, "revealed")
     ));
 
     revealer.set_child(Some(&revealer_content_container));

@@ -59,7 +59,7 @@
     }
 
     .toggle-button-dropdown image {
-        transition: $transition;
+        transition: -gtk-icon-transform $transition-length;
     }
     &.dropped .toggle-button-dropdown image {
         -gtk-icon-transform: rotate(90deg);
