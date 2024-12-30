@@ -37,8 +37,9 @@ scale {
 levelbar,
 scale {
     border-radius: $ui-radius;
-    transition:
-        background-color $transition-length;
+    * {
+        transition: $transition;
+    }
 
     &.vertical {
         trough {

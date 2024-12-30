@@ -1,8 +1,14 @@
 mod style;
 mod widgets;
 
-use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::{LazyLock, RwLock}};
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    rc::Rc,
+    sync::{LazyLock, RwLock},
+};
 
+use ballad_config::CatppuccinFlavor;
 use gtk::{
     Application, CssProvider,
     gdk::{self, Display, Monitor},
@@ -12,10 +18,14 @@ use gtk::{
 };
 use gtk::{gio, glib};
 use widgets::{
-    clock_underlay::clock_underlay, quick_settings::QuickSettings, sidebar::{screen_bevels::screen_bevels, sidebar}, PerMonitorWidget
+    PerMonitorWidget,
+    clock_underlay::clock_underlay,
+    quick_settings::QuickSettings,
+    sidebar::{screen_bevels::screen_bevels, sidebar},
 };
 
-static WINDOW_IDS: LazyLock<RwLock<HashMap<String, u32>>> = LazyLock::new(|| RwLock::new(HashMap::new()));
+static WINDOW_IDS: LazyLock<RwLock<HashMap<String, u32>>> =
+    LazyLock::new(|| RwLock::new(HashMap::new()));
 
 fn main() {
     gio::resources_register_include!("icons.gresource").unwrap();
@@ -45,7 +55,10 @@ fn activate(app: &Application) {
 
     fn log_window(window: &gtk::ApplicationWindow) {
         if let Some(title) = window.title() {
-            WINDOW_IDS.write().unwrap().insert(title.to_string(), window.id());
+            WINDOW_IDS
+                .write()
+                .unwrap()
+                .insert(title.to_string(), window.id());
         }
     }
 
@@ -62,7 +75,7 @@ fn activate(app: &Application) {
         let screen_bevels = screen_bevels(properties.clone());
         log_window(&screen_bevels);
         screen_bevels.present();
-        
+
         let clock_underlay = clock_underlay(properties);
         log_window(&clock_underlay);
         clock_underlay.present();
@@ -83,6 +96,7 @@ fn startup(_app: &Application) {
 fn watch_theme_config() {
     let config = ballad_config::get_or_init_shell_config();
     let initial_css = style::compile_scss_for_flavor(config.theme.catppuccin_flavor);
+
     let provider = Rc::new(RefCell::new(CssProvider::new()));
     provider.borrow().load_from_string(&initial_css);
     style_context_add_provider_for_display(
@@ -90,6 +104,8 @@ fn watch_theme_config() {
         &*provider.borrow(),
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
+
+    let theme_settings = gio::Settings::new("org.gnome.desktop.interface");
 
     ballad_services::config::CONFIG_SERVICE.with(|config_service| {
         config_service.connect_closure(
@@ -115,6 +131,24 @@ fn watch_theme_config() {
                     );
 
                     provider.replace(new_provider);
+
+                    let color = if config.catppuccin_flavor.is_dark() {
+                        "prefer-dark"
+                    } else {
+                        "prefer-light"
+                    };
+                    let _ = theme_settings.set_string("color-scheme", color);
+                    let flavor_stringified = match config.catppuccin_flavor {
+                        CatppuccinFlavor::Latte => "latte",
+                        CatppuccinFlavor::Frappe => "frappe",
+                        CatppuccinFlavor::Macchiato => "macchiato",
+                        CatppuccinFlavor::Mocha => "mocha",
+                    };
+                    let _ = theme_settings.set_string("gtk-theme", "");
+                    let _ = theme_settings.set_string(
+                        "gtk-theme",
+                        &format!("catppuccin-{flavor_stringified}-sky-standard"),
+                    );
                 }
             ),
         );

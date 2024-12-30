@@ -5,6 +5,10 @@ $sidebar-width: 32px;
     min-width: $sidebar-width;
     padding-top: 28px;
     padding-bottom: 28px;
+
+    label {
+        transition: $transition;
+    }
 }
 
 .workspace {

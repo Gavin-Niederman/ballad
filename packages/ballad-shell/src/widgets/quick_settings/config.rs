@@ -19,7 +19,6 @@ pub fn on_theme_button_press() -> impl Fn(bool) + 'static {
 
         move |dark: bool| {
             let current_config = config_service.shell_config();
-            println!("dark: {}, {:?}", dark, current_config);
 
             let retained_dark_flavor = Rc::new(Cell::new(CatppuccinFlavor::default()));
             if !dark {
