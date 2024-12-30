@@ -15,6 +15,15 @@ pub enum CatppuccinFlavor {
     Latte,
 }
 
+impl CatppuccinFlavor {
+    pub fn is_light(&self) -> bool {
+        matches!(self, CatppuccinFlavor::Latte)
+    }
+    pub fn is_dark(&self) -> bool {
+        !self.is_light()
+    }
+}
+
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "gtk", derive(glib::Boxed))]
 #[cfg_attr(feature = "gtk", boxed_type(name = "ThemeConfig"))]

@@ -12,5 +12,6 @@
     <file alias="theme-symbolic.svg">icons/theme-symbolic.svg</file>
     <file alias="bat-charging-symbolic.svg">icons/bat-charging-symbolic.svg</file>
     <file alias="settings-symbolic.svg">icons/settings-symbolic.svg</file>
+    <file alias="caret-right-symbolic.svg">icons/caret-right-symbolic.svg</file>
   </gresource>
 </gresources>
