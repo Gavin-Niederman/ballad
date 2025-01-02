@@ -131,7 +131,7 @@ mod gobject_imp {
         fn constructed(&self) {
             self.parent_constructed();
 
-            let (command_sender, command_receiver) = smol::channel::bounded(1);
+            let (command_sender, command_receiver) = smol::channel::bounded(5);
             let (update_sender, update_receiver) = smol::channel::bounded(1);
 
             // Notification thread
@@ -176,12 +176,16 @@ mod gobject_imp {
                     match command_receiver.try_recv() {
                         Err(TryRecvError::Closed) => break,
                         Ok(AudioChange::Muted(muted)) => {
+                            last_muted = muted;
                             system_sound.set_muted(muted);
                         }
                         Ok(AudioChange::Volume(volume)) => {
+                            last_volume = volume;
                             system_sound.set_volume(volume);
                         }
                         Ok(AudioChange::All(volume, muted)) => {
+                            last_volume = volume;
+                            last_muted = muted;
                             system_sound.set_volume(volume);
                             system_sound.set_muted(muted);
                         }

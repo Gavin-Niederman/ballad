@@ -96,12 +96,23 @@ pub fn volume(Volume { orientation }: Volume) -> gtk::Box {
                 ),
             );
 
+            // User input
+            volume_bar.connect_value_changed(clone!(
+                #[weak]
+                service,
+                move |bar| service.set_volume(bar.value())
+            ));
+            mute_toggle.connect_clicked(clone!(
+                #[weak]
+                service,
+                move |_| {
+                    service.set_muted(!service.muted());
+                    service.emit_by_name::<()>("audio-changed", &[]);
+                }
+            ));
+
             percent_display.set_label(&format!("{:.0}%", service.volume() * 100.0));
             volume_bar.set_value(service.volume());
-
-            mute_toggle.connect_clicked(move |_| {
-                service.set_muted(!service.muted());
-            });
         }
     ));
 
