@@ -1,5 +1,6 @@
 pub mod battery;
 pub mod screen_bevels;
+pub mod volume;
 
 use ballad_services::battery::BATTERY_SERVICE;
 use gtk::{
@@ -73,10 +74,12 @@ pub fn sidebar(
         .name("lower-widgets-seperator")
         .build();
     let battery = battery::Battery::builder().build();
+    let volume = volume::Volume::builder().build();
 
     lower_section.append(&quick_settings_toggle);
     lower_section.append(&lower_separator);
     let battery_available = BATTERY_SERVICE.with(|service| service.available());
+    lower_section.append(&volume);
     if battery_available {
         lower_section.append(&battery);
     }

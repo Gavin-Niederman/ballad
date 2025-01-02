@@ -11,24 +11,26 @@
       let pkgs = nixpkgs.legacyPackages.${system};
       in {
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
+          nativeBuildInputs = with pkgs; [
+            pkg-config
+
             gtk4
             gtk4-layer-shell
-            pkg-config
-            dart-sass
             glib
-            gdk-pixbuf
             librsvg
             cairo
+
+            alsa-lib
           ];
           LD_LIBRARY_PATH = with pkgs;
             pkgs.lib.makeLibraryPath [
               gtk4
               gtk4-layer-shell
               glib
-              gdk-pixbuf
               librsvg
               cairo
+
+              alsa-lib
             ];
         };
       });

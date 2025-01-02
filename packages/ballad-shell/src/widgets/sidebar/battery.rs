@@ -89,9 +89,15 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
         .css_classes(["percent-display"])
         .build();
 
+    let battery_bar_classes = if orientation == crate::widgets::Orientation::Horizontal {
+        ["battery-bar", "horizontal"]
+    } else {
+        ["battery-bar", "vertical"]
+    };
+
     let battery_bar = LevelBar::builder()
         .orientation(orientation.into())
-        .css_classes(["battery-bar", "vertical"])
+        .css_classes(battery_bar_classes)
         .name("battery-bar")
         .inverted(true)
         .mode(gtk::LevelBarMode::Continuous)
