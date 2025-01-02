@@ -70,15 +70,18 @@ mod audio_imp {
 
 mod gobject_imp {
     use std::cell::{Cell, RefCell};
-    use std::sync::OnceLock;
+    use std::sync::{Arc, Mutex, OnceLock};
     use std::thread::sleep;
     use std::time::Duration;
 
+    use ballad_config::{ServiceConfig, get_or_init_service_config};
     use gtk::gio;
     use gtk::glib::subclass::Signal;
-    use gtk::glib::{self, clone};
+    use gtk::glib::{self, clone, closure_local};
     use gtk::{prelude::*, subclass::prelude::*};
     use smol::channel::TryRecvError;
+
+    use crate::config::{CONFIG_SERVICE, ConfigService};
 
     use super::audio_imp;
 
@@ -134,6 +137,24 @@ mod gobject_imp {
             let (command_sender, command_receiver) = smol::channel::bounded(5);
             let (update_sender, update_receiver) = smol::channel::bounded(1);
 
+            let update_interval = Arc::new(Mutex::new(
+                get_or_init_service_config().poll_interval_millis,
+            ));
+
+            CONFIG_SERVICE.with(|config| {
+                config.connect_closure(
+                    "service-config-changed",
+                    false,
+                    closure_local!(
+                        #[weak]
+                        update_interval,
+                        move |_: ConfigService, config: ServiceConfig| {
+                            *update_interval.lock().unwrap() = config.poll_interval_millis;
+                        }
+                    ),
+                );
+            });
+
             // Notification thread
             glib::spawn_future_local(clone!(
                 #[weak(rename_to = this)]
@@ -167,6 +188,10 @@ mod gobject_imp {
 
                 let mut last_volume = system_sound.get_volume();
                 let mut last_muted = system_sound.get_muted();
+
+                let mut sleep_duration = Duration::from_millis(
+                    *update_interval.lock().unwrap() as u64
+                );
 
                 update_sender
                     .try_send(AudioChange::All(last_volume, last_muted))
@@ -205,7 +230,13 @@ mod gobject_imp {
                     }
 
                     system_sound.tick();
-                    sleep(Duration::from_millis(25));
+                    
+                    // Prevent lock contention
+                    if let Ok(duration) = update_interval.try_lock() {
+                        sleep_duration = Duration::from_millis(*duration as u64);
+                    }
+
+                    sleep(sleep_duration);
                 }
             });
 

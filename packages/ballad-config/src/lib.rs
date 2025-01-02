@@ -79,3 +79,42 @@ pub fn set_shell_config(config: &ShellConfig) {
     let path = shell_config_path();
     std::fs::write(&path, toml::to_string(config).unwrap()).unwrap();
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "gtk", derive(glib::Boxed, glib::Variant))]
+#[cfg_attr(feature = "gtk", boxed_type(name = "ServiceConfig"))]
+pub struct ServiceConfig {
+    pub poll_interval_millis: u32,
+}
+impl Default for ServiceConfig {
+    fn default() -> Self {
+        Self {
+            poll_interval_millis: 10,
+        }
+    }
+}
+
+pub fn service_config_path() -> PathBuf {
+    xdg::BaseDirectories::with_prefix("ballad")
+        .unwrap()
+        .place_config_file("service_config.toml")
+        .unwrap()
+}
+
+pub fn get_or_init_service_config() -> ServiceConfig {
+    let path = service_config_path();
+    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+    if path.exists() {
+        let content = std::fs::read_to_string(&path).unwrap();
+        toml::from_str(&content).unwrap()
+    } else {
+        let config = ServiceConfig::default();
+        std::fs::write(&path, toml::to_string(&config).unwrap()).unwrap();
+        config
+    }
+}
+
+pub fn set_service_config(config: &ServiceConfig) {
+    let path = service_config_path();
+    std::fs::write(&path, toml::to_string(config).unwrap()).unwrap();
+}
