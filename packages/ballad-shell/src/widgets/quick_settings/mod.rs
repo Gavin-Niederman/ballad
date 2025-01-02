@@ -26,11 +26,7 @@ impl From<QuickSettings<'_>> for ApplicationWindow {
     }
 }
 
-pub fn quick_settings(
-    QuickSettings {
-        application,
-    }: QuickSettings,
-) -> ApplicationWindow {
+pub fn quick_settings(QuickSettings { application }: QuickSettings) -> ApplicationWindow {
     let window: ApplicationWindow = LayershellWindow::builder()
         .layer(Layer::Top)
         .application(application)

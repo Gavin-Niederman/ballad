@@ -49,7 +49,7 @@ fn bundle_scss(out_dir: &Path) {
     let includes = style_constants
         .iter()
         .fold(String::new(), |acc, (name, path)| {
-            let include = format!("pub const {name}: &'static str = include_str!(\"{path}\");\n");
+            let include = format!("pub const {name}: &str = include_str!(\"{path}\");\n");
             acc + &include
         });
 

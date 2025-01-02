@@ -1,12 +1,14 @@
 use std::cell::LazyCell;
 
-use ballad_services::audio::AUDIO_SERVICE;
+use ballad_services::audio::{AUDIO_SERVICE, AudioService};
 use gtk::{
-    glib::{self, clone}, prelude::*, Button, Stack, StackTransitionType
+    Button, Stack, StackTransitionType,
+    glib::{self, clone, closure_local},
+    prelude::*,
 };
 use typed_builder::TypedBuilder;
 
-use crate::widgets::symbolic_icon::symbolic_icon;
+use crate::{utils::set_class_on_widget, widgets::symbolic_icon::symbolic_icon};
 
 #[derive(Debug, TypedBuilder, Clone, PartialEq, Eq)]
 #[builder(build_method(into = gtk::Box))]
@@ -58,7 +60,9 @@ pub fn volume(Volume { orientation }: Volume) -> gtk::Box {
         .orientation(orientation.into())
         .css_classes(volume_bar_classes)
         .name("volume-bar")
+        .inverted(true)
         .build();
+    volume_bar.set_range(0.0, 1.0);
 
     AUDIO_SERVICE.with(clone!(
         #[weak]
@@ -78,10 +82,19 @@ pub fn volume(Volume { orientation }: Volume) -> gtk::Box {
                 .bind_property("muted", &icon_stack, "visible-child-name")
                 .transform_to(|_, value: bool| Some(if value { "muted" } else { "unmuted" }))
                 .build();
-            // service
-            //     .bind_property("volume", &volume_bar, "fill-value")
-            //     .transform_to(|_, value: f64| Some(value * 100.0))
-            //     .build();
+
+            service.connect_closure(
+                "audio-changed",
+                false,
+                closure_local!(
+                    #[weak]
+                    volume_bar,
+                    move |service: AudioService| {
+                        volume_bar.set_value(service.volume());
+                        set_class_on_widget(service.muted(), &volume_bar, "muted");
+                    }
+                ),
+            );
 
             percent_display.set_label(&format!("{:.0}%", service.volume() * 100.0));
             volume_bar.set_value(service.volume());
@@ -89,7 +102,6 @@ pub fn volume(Volume { orientation }: Volume) -> gtk::Box {
             mute_toggle.connect_clicked(move |_| {
                 service.set_muted(!service.muted());
             });
-
         }
     ));
 

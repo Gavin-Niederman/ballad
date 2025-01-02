@@ -17,7 +17,7 @@ pub enum BatteryLevel {
 }
 impl BatteryLevel {
     pub fn from_percent(percent: f64) -> Self {
-        if percent >= 98.0 {
+        if percent >= 99.0 {
             Self::Full
         } else if percent > 60.0 {
             Self::High
@@ -112,15 +112,6 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
         battery_bar,
         move |service| {
             service
-                .bind_property("percentage", &icon_stack, "visible-child-name")
-                .transform_to(|_, percent: f64| {
-                    let level = BatteryLevel::from_percent(percent);
-                    Some(level.as_class_name())
-                })
-                .sync_create()
-                .build();
-
-            service
                 .bind_property("percentage", &percent_label, "label")
                 .transform_to(|_, percent: f64| Some(format!("{:.0}%", percent)))
                 .sync_create()
@@ -137,17 +128,38 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
                 class_names
             }
 
+            fn shown_battery_icon(level: BatteryLevel, charging: bool) -> &'static str {
+                if charging && level != BatteryLevel::Full {
+                    "charging"
+                } else {
+                    match level {
+                        BatteryLevel::Full => "full",
+                        BatteryLevel::High => "high",
+                        BatteryLevel::Medium => "medium",
+                        BatteryLevel::Low => "low",
+                        BatteryLevel::Critical => "critical",
+                    }
+                }
+            }
+
             service.connect_closure(
                 "battery-changed",
                 false,
                 closure_local!(
                     #[weak]
                     battery_bar,
+                    #[weak]
+                    icon_stack,
                     move |battery: BatteryService| {
                         let class_names = bar_classes(&battery);
 
                         battery_bar.set_css_classes(&class_names);
                         battery_bar.set_value(battery.percentage() / 100.0);
+
+                        icon_stack.set_visible_child_name(shown_battery_icon(
+                            BatteryLevel::from_percent(battery.percentage()),
+                            battery.charging(),
+                        ));
                     }
                 ),
             );
@@ -155,9 +167,10 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
             let class_names = bar_classes(service);
             battery_bar.set_css_classes(&class_names);
             battery_bar.set_value(service.percentage() / 100.0);
-            icon_stack.set_visible_child_name(
-                BatteryLevel::from_percent(service.percentage()).as_class_name(),
-            );
+            icon_stack.set_visible_child_name(shown_battery_icon(
+                BatteryLevel::from_percent(service.percentage()),
+                service.charging(),
+            ));
         }
     ));
 

@@ -82,9 +82,7 @@ fn activate(app: &Application) {
         clock_underlay.present();
     });
 
-    let quick_settings = QuickSettings::builder()
-        .application(app)
-        .build();
+    let quick_settings = QuickSettings::builder().application(app).build();
     log_window(&quick_settings);
     quick_settings.present();
     quick_settings.set_visible(false);
