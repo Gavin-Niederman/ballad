@@ -71,6 +71,8 @@ mod audio_imp {
 mod gobject_imp {
     use std::cell::{Cell, RefCell};
     use std::sync::OnceLock;
+    use std::thread::sleep;
+    use std::time::Duration;
 
     use gtk::gio;
     use gtk::glib::subclass::Signal;
@@ -132,6 +134,7 @@ mod gobject_imp {
             let (command_sender, command_receiver) = smol::channel::bounded(1);
             let (update_sender, update_receiver) = smol::channel::bounded(1);
 
+            // Notification thread
             glib::spawn_future_local(clone!(
                 #[weak(rename_to = this)]
                 self,
@@ -158,6 +161,7 @@ mod gobject_imp {
                 }
             ));
 
+            // Alsa daemon thread
             gio::spawn_blocking(move || {
                 let mut system_sound = audio_imp::SystemSound::new().unwrap();
 
@@ -197,6 +201,7 @@ mod gobject_imp {
                     }
 
                     system_sound.tick();
+                    sleep(Duration::from_millis(25));
                 }
             });
 
