@@ -4,9 +4,11 @@ members = ["packages/*"]
 
 [workspace.dependencies]
 gtk = { version = "0.9.5", package = "gtk4", features = ["v4_16"] }
+gtk4-layer-shell = "0.4.0"
 xdg = "2.5.2"
 serde = { version = "1.0.217", features = ["derive"] }
 toml = "0.8.19"
+smol = "2.0.2"
 
 ballad-services = { path = "packages/ballad-services" }
 ballad-config = { path = "packages/ballad-config" }

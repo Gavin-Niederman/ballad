@@ -7,4 +7,4 @@ edition = "2024"
 gtk = { workspace = true }
 ballad-config = { workspace = true, features = ["gtk"]}
 alsa = { git = "https://github.com/diwic/alsa-rs", version = "0.9.1" }
-smol = "2.0.2"
+smol = { workspace = true }

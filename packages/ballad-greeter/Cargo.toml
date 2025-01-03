@@ -1,0 +1,11 @@
+[package]
+name = "ballad-greeter"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gtk = { workspace = true }
+greetd_ipc = "0.10.3"
+smol = { workspace = true }
+serde_json = "1.0.134"
+snafu = "0.8.5"

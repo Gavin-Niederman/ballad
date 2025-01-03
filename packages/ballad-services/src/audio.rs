@@ -189,9 +189,8 @@ mod gobject_imp {
                 let mut last_volume = system_sound.get_volume();
                 let mut last_muted = system_sound.get_muted();
 
-                let mut sleep_duration = Duration::from_millis(
-                    *update_interval.lock().unwrap() as u64
-                );
+                let mut sleep_duration =
+                    Duration::from_millis(*update_interval.lock().unwrap() as u64);
 
                 update_sender
                     .try_send(AudioChange::All(last_volume, last_muted))
@@ -230,7 +229,7 @@ mod gobject_imp {
                     }
 
                     system_sound.tick();
-                    
+
                     // Prevent lock contention
                     if let Ok(duration) = update_interval.try_lock() {
                         sleep_duration = Duration::from_millis(*duration as u64);
