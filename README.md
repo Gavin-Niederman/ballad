@@ -7,7 +7,7 @@ for tiling window managerwith a focus on Wayland.
 
 At this stage in development, Ballad looks like this:
 
-#![Image of Ballad shell](todo)
+![Image of Ballad shell](https://github.com/user-attachments/assets/8c6c95a1-8100-42e8-9bd6-9bb38f0e65c6)
 
 Ballad will have first class support for [Niri](https://github.com/yalter/niri)
 as well as more common TWMs like [Sway](https://github.com/swaywm/sway) and [Hyprland](https://github.com/hyprwm/hyprland).
