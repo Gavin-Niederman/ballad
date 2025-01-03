@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-gtk = { version = "0.9.5", package = "gtk4", features = ["v4_16"] }
-ballad-config = { path = "../ballad-config", features = ["gtk"]}
+gtk = { workspace = true }
+ballad-config = { workspace = true, features = ["gtk"]}
 alsa = { git = "https://github.com/diwic/alsa-rs", version = "0.9.1" }
 smol = "2.0.2"

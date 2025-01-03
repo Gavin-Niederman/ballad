@@ -4,11 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-gtk = { version = "0.9.5", package = "gtk4", features = ["v4_16"] }
+ballad-services = { workspace = true }
+ballad-config = { workspace = true }
+ballad-search = { workspace = true }
+
+gtk = { workspace = true }
 gtk4-layer-shell = "0.4.0"
 typed-builder = "0.20.0"
-ballad-services = { path = "../ballad-services" }
-ballad-config = { path = "../ballad-config" }
 grass = { version = "0.13.4", default-features = false }
 chrono = "0.4.39"
 

@@ -1,3 +1,12 @@
 [workspace]
 resolver = "2"
 members = ["packages/*"]
+
+[workspace.dependencies]
+gtk = { version = "0.9.5", package = "gtk4", features = ["v4_16"] }
+xdg = "2.5.2"
+
+ballad-services = { path = "packages/ballad-services" }
+ballad-config = { path = "packages/ballad-config" }
+ballad-search = { path = "packages/ballad-search" }
+ballad-shell = { path = "packages/ballad-shell" }

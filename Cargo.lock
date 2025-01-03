@@ -217,6 +217,7 @@ name = "ballad-shell"
 version = "0.1.0"
 dependencies = [
  "ballad-config",
+ "ballad-search",
  "ballad-services",
  "chrono",
  "glib-build-tools",
