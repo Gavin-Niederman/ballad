@@ -7,5 +7,11 @@ edition = "2024"
 xdg = { workspace = true }
 serde = { workspace = true }
 toml = { workspace = true }
+smol = { workspace = true }
+
 url = { version = "2.5.4", features = ["serde"] }
-uuid = { version = "1.11.0", features = ["serde", "v4"] }
+uuid = { version = "1.11.0", features = ["serde", "v4", "fast-rng"] }
+freedesktop-desktop-entry = "0.7.5"
+
+[dev-dependencies]
+futures = { version = "0.3.31", default-features = false, features = ["std", "async-await"] }

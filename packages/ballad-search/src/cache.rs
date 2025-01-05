@@ -1,23 +1,9 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
-use url::Url;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Hash, Serialize, Deserialize)]
-pub enum SearchEngine {
-    #[default]
-    DuckDuckGo,
-    Google,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
-pub enum SearchResult {
-    Application { path: PathBuf },
-    File { path: PathBuf },
-    WebSearch { query: String },
-    Website { url: Url },
-}
+use crate::SearchResult;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SearchCache {
