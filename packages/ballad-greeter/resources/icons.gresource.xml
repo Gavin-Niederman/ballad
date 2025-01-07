@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/com/gavinniederman/ballad-greeter/icons/scalable/actions">
+    <file alias="new-user-symbolic.svg">icons/new-user-symbolic.svg</file>
+  </gresource>
+</gresources>

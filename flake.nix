@@ -29,6 +29,8 @@
           buildInputs = [
             # For ballad-greeter development
             greetd_stub
+            # For generating dbus traits from xml
+            pkgs.zbus-xmlgen
           ];
 
           nativeBuildInputs = with pkgs; [

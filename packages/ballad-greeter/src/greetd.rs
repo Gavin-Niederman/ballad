@@ -49,13 +49,9 @@ impl GreetdSession {
         let mut packet = vec![0u8; packet_size];
         self.socket.read_exact(&mut packet).await?;
 
-        let packet = serde_json::from_slice(&packet)
-            .map_err(|de| io::Error::new(io::ErrorKind::InvalidData, de));
-        dbg!(&packet);
-        packet
+        serde_json::from_slice(&packet).map_err(|de| io::Error::new(io::ErrorKind::InvalidData, de))
     }
     async fn send_packet(&mut self, packet: &greetd_ipc::Request) -> io::Result<()> {
-        dbg!(packet);
         let packet = serde_json::to_vec(packet)
             .map_err(|se| io::Error::new(io::ErrorKind::InvalidData, se))?;
         let packet_size = (packet.len() as u32).to_le_bytes();
@@ -63,6 +59,12 @@ impl GreetdSession {
         self.socket.write_all(&packet_size).await?;
         self.socket.write_all(&packet).await?;
         Ok(())
+    }
+
+    pub async fn shutdown_session(&mut self) -> io::Result<()> {
+        let packet = greetd_ipc::Request::CancelSession;
+        self.send_packet(&packet).await?;
+        self.socket.shutdown(Shutdown::Both)
     }
 
     pub async fn step_statemachine(
@@ -146,10 +148,8 @@ impl GreetdSession {
                 Ok(RequestedAction::ExitApplication)
             }
             AuthFlowState::Failed => {
-                let packet = greetd_ipc::Request::CancelSession;
-                _ = self.send_packet(&packet).await;
-                _ = self.socket.shutdown(Shutdown::Both);
-                Err(GreeterError::FailedToAuthenticate)
+                _ = self.shutdown_session().await;
+                Err(GreeterError::SessionShutdown)
             }
         }
     }

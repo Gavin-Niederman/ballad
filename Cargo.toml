@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = ["packages/*"]
+default-members = ["packages/ballad-shell"]
 
 [workspace.dependencies]
 gtk = { version = "0.9.5", package = "gtk4", features = ["v4_16"] }

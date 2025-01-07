@@ -8,3 +8,4 @@ gtk = { workspace = true }
 ballad-config = { workspace = true, features = ["gtk"]}
 alsa = { git = "https://github.com/diwic/alsa-rs", version = "0.9.1" }
 smol = { workspace = true }
+zbus = "5.2.0"
