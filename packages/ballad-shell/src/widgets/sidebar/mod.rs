@@ -8,7 +8,7 @@ use gtk::{
     prelude::{BoxExt, ButtonExt, GtkApplicationExt, GtkWindowExt, MonitorExt, WidgetExt},
 };
 
-use crate::WINDOW_IDS;
+use crate::app::WINDOW_IDS;
 
 use super::{
     PerMonitorWidget,
