@@ -2,7 +2,7 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     rc::Rc,
-    sync::{LazyLock, RwLock},
+    sync::OnceLock,
 };
 
 use crate::widgets::{
@@ -13,32 +13,82 @@ use crate::widgets::{
 };
 use ballad_config::CatppuccinFlavor;
 use gtk::{
-    Application, CssProvider,
-    gdk::{self, Display, Monitor},
-    glib::{ExitCode, closure_local},
-    prelude::*,
-    style_context_add_provider_for_display, style_context_remove_provider_for_display,
+    gdk::{self, Display, Monitor}, glib::{clone, closure_local, ExitCode}, prelude::*, style_context_add_provider_for_display, style_context_remove_provider_for_display, Application, ApplicationWindow, CssProvider, Window
 };
 use gtk::{gio, glib};
+use smol::channel::{self, Sender};
 
-pub static WINDOW_IDS: LazyLock<RwLock<HashMap<String, u32>>> =
-    LazyLock::new(|| RwLock::new(HashMap::new()));
+pub struct App {
+    pub app: Application,
+    pub window_ids: HashMap<String, u32>,
+}
+impl App {
+    pub fn new(app: Application) -> Self {
+        let (control_sender, control_receiver) = channel::bounded(1);
+        _ = APP_CONTROL_SENDER.set(Sender::clone(&control_sender));
 
-pub fn launch_app(gtk_args: Vec<String>) -> ExitCode {
+        gtk::glib::spawn_future_local(clone!(#[weak] app, async move {
+            while let Ok(control) = control_receiver.recv().await {
+                match control {
+                    AppControl::Quit => app.quit(),
+                }
+            }
+        }));
+
+        Self {
+            app,
+            window_ids: HashMap::new(),
+        }
+    }
+
+    fn push_window(&mut self, window: &ApplicationWindow) {
+        if let Some(title) = window.title() {
+            self.window_ids.insert(title.to_string(), window.id());
+        }
+    }
+
+    pub fn window_by_title(&self, title: &str) -> Option<Window> {
+        let id = self.window_ids.get(title).copied();
+        id.and_then(|id| self.window_by_id(id))
+    }
+    pub fn window_by_id(&self, id: u32) -> Option<Window> {
+        self.app.window_by_id(id)
+    }
+}
+
+pub enum AppControl {
+    Quit,
+}
+
+thread_local! {
+    pub static APP: RefCell<Option<App>> = const { RefCell::new(None) };
+}
+pub static APP_CONTROL_SENDER: OnceLock<Sender<AppControl>> = const { OnceLock::new() };
+
+pub fn launch_app(
+    gtk_args: Vec<String>,
+) -> Result<ExitCode, crate::Error> {
     gio::resources_register_include!("icons.gresource").unwrap();
 
-    let app = Application::builder()
+    let application = Application::builder()
         .application_id("com.gavinniederman.ballad-shell")
         .build();
 
-    app.connect_activate(activate);
-    app.connect_startup(startup);
+    application.connect_activate(activate);
+    application.connect_startup(startup);
 
+    APP.with(|app| {
+        app.replace(Some(App::new(application.clone())));
+    });
+
+    // The regular `Application::run` function takes all the arguments from the command line including ones we parse ourselves.
+    // Build a list of after args and binary name to get around this.
     let mut args = vec![std::env::args().next().unwrap()];
     args.extend(gtk_args);
-    app.run_with_args(&args)
+    Ok(application.run_with_args(&args))
 }
 
+/// Gets the monitors for the default GDK display.
 fn get_monitors() -> impl Iterator<Item = Monitor> {
     let display = gdk::Display::default().unwrap();
     let monitors = display.monitors();
@@ -49,39 +99,42 @@ fn get_monitors() -> impl Iterator<Item = Monitor> {
     monitors.into_iter()
 }
 
+/// Constructs the shell UI.
 fn activate(app: &Application) {
     let monitors = get_monitors();
 
-    fn log_window(window: &gtk::ApplicationWindow) {
-        if let Some(title) = window.title() {
-            WINDOW_IDS
-                .write()
-                .unwrap()
-                .insert(title.to_string(), window.id());
-        }
+    /// Adds the window ID to the global map.
+    /// Used to toggle windows on and off.
+    fn push_window_id(window: &gtk::ApplicationWindow) {
+        APP.with(|app| {
+            let mut app = app.borrow_mut();
+            app.as_mut().unwrap().push_window(window);
+        });
     }
 
+    // Widgets that should appear on every monitor.
     monitors.for_each(|monitor| {
+        // Create only one instance of the properties for each monitor because the config is the same for each widget.
         let properties: PerMonitorWidget = PerMonitorWidget::builder()
             .application(app)
             .monitor(monitor.clone())
             .build();
 
         let sidebar = sidebar(properties.clone());
-        log_window(&sidebar);
+        push_window_id(&sidebar);
         sidebar.present();
 
         let screen_bevels = screen_bevels(properties.clone());
-        log_window(&screen_bevels);
+        push_window_id(&screen_bevels);
         screen_bevels.present();
 
         let clock_underlay = clock_underlay(properties);
-        log_window(&clock_underlay);
+        push_window_id(&clock_underlay);
         clock_underlay.present();
     });
 
     let quick_settings = QuickSettings::builder().application(app).build();
-    log_window(&quick_settings);
+    push_window_id(&quick_settings);
     quick_settings.present();
     quick_settings.set_visible(false);
 }
@@ -94,7 +147,9 @@ fn watch_theme_config() {
     let config = ballad_config::get_or_init_shell_config();
     let initial_css = crate::style::compile_scss_for_flavor(config.theme.catppuccin_flavor);
 
+    // The CSS provider is replaced when the theme changes.
     let provider = Rc::new(RefCell::new(CssProvider::new()));
+    // Load the initial CSS.
     provider.borrow().load_from_string(&initial_css);
     style_context_add_provider_for_display(
         &Display::default().unwrap(),
@@ -129,6 +184,9 @@ fn watch_theme_config() {
 
                     provider.replace(new_provider);
 
+                    // Set the system GTK theme based on our theme config.
+                    //TODO: With custom theme support this will need a complete rework.
+                    //TODO: Maybe each theme should have an associated GTK theme?
                     let color = if config.catppuccin_flavor.is_dark() {
                         "prefer-dark"
                     } else {

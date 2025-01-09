@@ -4,11 +4,11 @@ pub mod volume;
 
 use ballad_services::battery::BATTERY_SERVICE;
 use gtk::{
-    Align, Application, ApplicationWindow, Box, Button, CenterBox, Orientation, Separator,
-    prelude::{BoxExt, ButtonExt, GtkApplicationExt, GtkWindowExt, MonitorExt, WidgetExt},
+    Align, ApplicationWindow, Box, Button, CenterBox, Orientation, Separator,
+    prelude::*,
 };
 
-use crate::app::WINDOW_IDS;
+use crate::app::APP;
 
 use super::{
     PerMonitorWidget,
@@ -17,17 +17,20 @@ use super::{
     window::{Anchor, LayershellWindow},
 };
 
-pub fn quick_settings_toggle(application: Application) -> Button {
+pub fn quick_settings_toggle() -> Button {
     let button = Button::builder()
         .name("quick-settings-toggle")
         .css_classes(["icon-container", "hoverable"])
         .build();
 
     button.connect_clicked(move |_| {
-        let ids = WINDOW_IDS.read().unwrap();
-        let quick_settings_id = ids.get(QUICK_SETTINGS_WINDOW_TITLE).unwrap();
-        let quick_settings_window = application.window_by_id(*quick_settings_id).unwrap();
-        quick_settings_window.set_visible(!quick_settings_window.is_visible());
+        if let Some(quick_settings_window) = APP.with(|app| {
+            app.borrow()
+                .as_ref()
+                .map(|app| app.window_by_title(QUICK_SETTINGS_WINDOW_TITLE).unwrap())
+        }) {
+            quick_settings_window.set_visible(!quick_settings_window.is_visible())
+        }
     });
 
     let icon = symbolic_icon("settings-symbolic", 24);
@@ -68,7 +71,7 @@ pub fn sidebar(
         .valign(Align::End)
         .build();
 
-    let quick_settings_toggle = quick_settings_toggle(application.clone());
+    let quick_settings_toggle = quick_settings_toggle();
     let lower_separator = Separator::builder()
         .orientation(Orientation::Vertical)
         .name("lower-widgets-seperator")

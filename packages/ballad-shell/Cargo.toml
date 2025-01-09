@@ -8,13 +8,17 @@ ballad-services = { workspace = true }
 ballad-config = { workspace = true }
 ballad-search = { workspace = true }
 
+snafu =  { workspace = true }
+smol = { workspace = true }
+zbus = { workspace = true }
 gtk = { workspace = true }
 gtk4-layer-shell = { workspace = true }
-zbus = { workspace = true }
+
 typed-builder = "0.20.0"
 grass = { version = "0.13.4", default-features = false }
 chrono = "0.4.39"
 clap = { version = "4.5.24", features = ["derive"] }
+smol-macros = "0.1.1"
 
 [build-dependencies]
 glib-build-tools = "0.20.0"

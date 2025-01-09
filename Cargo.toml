@@ -10,6 +10,7 @@ serde = { version = "1.0.217", features = ["derive"] }
 toml = "0.8.19"
 smol = "2.0.2"
 zbus = "5.2.0"
+snafu = "0.8.5"
 
 ballad-services = { path = "packages/ballad-services" }
 ballad-config = { path = "packages/ballad-config" }
