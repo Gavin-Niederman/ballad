@@ -1,4 +1,8 @@
+use std::sync::LazyLock;
+
 pub mod audio;
-pub mod battery;
+pub mod upower;
 pub mod config;
 pub mod variable;
+
+pub(crate) static DBUS_SYSTEM_CONNECTION: LazyLock<zbus::Connection> = LazyLock::new(|| smol::block_on(zbus::Connection::system()).unwrap());

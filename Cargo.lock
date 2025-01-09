@@ -321,8 +321,10 @@ version = "0.1.0"
 dependencies = [
  "alsa",
  "ballad-config",
+ "futures",
  "gtk4",
  "smol",
+ "zbus",
 ]
 
 [[package]]

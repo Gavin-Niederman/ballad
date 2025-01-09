@@ -2,7 +2,7 @@ pub mod battery;
 pub mod screen_bevels;
 pub mod volume;
 
-use ballad_services::battery::BATTERY_SERVICE;
+use ballad_services::upower::BATTERY_SERVICE;
 use gtk::{
     Align, ApplicationWindow, Box, Button, CenterBox, Orientation, Separator,
     prelude::*,

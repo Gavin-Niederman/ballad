@@ -1,4 +1,4 @@
-use ballad_services::battery::{BATTERY_SERVICE, BatteryService};
+use ballad_services::upower::{BATTERY_SERVICE, UPowerService};
 use gtk::glib::{clone, closure_local};
 use gtk::prelude::{BoxExt, WidgetExt};
 use gtk::{Box, Stack, StackTransitionType, prelude::ObjectExt};
@@ -117,7 +117,7 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
                 .sync_create()
                 .build();
 
-            fn bar_classes(battery: &BatteryService) -> Vec<&'static str> {
+            fn bar_classes(battery: &UPowerService) -> Vec<&'static str> {
                 let mut class_names = vec!["battery-bar", "vertical"];
                 let percent = battery.percentage();
                 let level = BatteryLevel::from_percent(percent);
@@ -150,7 +150,7 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
                     battery_bar,
                     #[weak]
                     icon_stack,
-                    move |battery: BatteryService| {
+                    move |battery: UPowerService| {
                         let class_names = bar_classes(&battery);
 
                         battery_bar.set_css_classes(&class_names);
