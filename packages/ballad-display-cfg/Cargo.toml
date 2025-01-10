@@ -1,0 +1,9 @@
+[package]
+name = "ballad-display-cfg"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wayland-client = "0.31.7"
+smol = { workspace = true }
+smithay-client-toolkit = "0.19.2"

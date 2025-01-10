@@ -42,6 +42,8 @@
             cairo
 
             alsa-lib
+
+            libxkbcommon
           ];
           LD_LIBRARY_PATH = with pkgs;
             pkgs.lib.makeLibraryPath [
@@ -52,6 +54,8 @@
               cairo
 
               alsa-lib
+
+              libxkbcommon
             ];
         };
       });
