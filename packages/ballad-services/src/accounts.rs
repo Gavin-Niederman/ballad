@@ -264,11 +264,12 @@ mod user_imp {
     use std::sync::OnceLock;
 
     use futures::join;
-    use gtk::glib;
     use gtk::glib::Properties;
     use gtk::glib::subclass::Signal;
+    use gtk::glib::{self, clone};
     use gtk::{prelude::*, subclass::prelude::*};
     use smol::lock::RwLock;
+    use smol::stream::StreamExt;
 
     use super::bus::UserProxy;
 
@@ -351,6 +352,25 @@ mod user_imp {
             self.obj().emit_by_name::<()>("changed", &[]);
         }
 
+        pub(super) fn subscribe_to_updates(&self) {
+            glib::spawn_future_local(clone!(
+                #[weak(rename_to = this)]
+                self,
+                async move {
+                    let proxy = this.proxy.read().await;
+                    let mut stream = proxy
+                        .as_ref()
+                        .unwrap()
+                        .receive_changed()
+                        .await
+                        .expect("Failed to receive changed signal");
+                    while stream.next().await.is_some() {
+                        this.update().await;
+                    }
+                }
+            ));
+        }
+
         pub async fn set_icon(&self, path: PathBuf) -> zbus::Result<()> {
             let proxy = self.proxy.read().await;
             let proxy = proxy.as_ref().unwrap();
@@ -402,12 +422,14 @@ mod user_imp {
 mod imp {
     use std::sync::OnceLock;
 
+    use futures::FutureExt;
     use gtk::gio::ListStore;
-    use gtk::glib;
     use gtk::glib::Properties;
     use gtk::glib::subclass::Signal;
+    use gtk::glib::{self, clone};
     use gtk::{prelude::*, subclass::prelude::*};
     use smol::lock::RwLock;
+    use smol::stream::StreamExt;
 
     use crate::DBUS_SYSTEM_CONNECTION;
 
@@ -504,7 +526,31 @@ mod imp {
                 self.proxy.write().await.replace(proxy);
 
                 self.update().await;
-            })
+            });
+
+            glib::spawn_future_local(clone!(
+                #[weak(rename_to = this)]
+                self,
+                async move {
+                    let proxy = this.proxy.read().await;
+                    let proxy = proxy.as_ref().unwrap();
+                    let mut added_stream = proxy
+                        .receive_user_added()
+                        .await
+                        .expect("Failed to receive user_added signal");
+                    let mut deleted_stream = proxy
+                        .receive_user_deleted()
+                        .await
+                        .expect("Failed to receive user_deleted signal");
+
+                    while futures::select! {
+                        added = added_stream.next().fuse() => added.is_some(),
+                        deleted = deleted_stream.next().fuse() => deleted.is_some(),
+                    } {
+                        this.update().await;
+                    }
+                }
+            ));
         }
         fn signals() -> &'static [Signal] {
             static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
@@ -551,6 +597,8 @@ impl User {
         user.imp().proxy.write().await.replace(proxy);
 
         user.imp().update().await;
+
+        user.imp().subscribe_to_updates();
 
         user
     }
