@@ -22,12 +22,14 @@ pub enum SearchResult {
 }
 
 pub async fn applications_results() -> Vec<SearchResult> {
-    discovery::applications().await
-        .map(|app| SearchResult::Application {
-            path: app.path
-        })
+    discovery::applications()
+        .await
+        .map(|app| SearchResult::Application { path: app.path })
         .collect()
 }
 pub async fn files_results(query: impl AsRef<str>) -> Vec<SearchResult> {
-    discovery::locate(query.as_ref()).await.map(|path| SearchResult::File { path }).collect()
+    discovery::locate(query.as_ref())
+        .await
+        .map(|path| SearchResult::File { path })
+        .collect()
 }

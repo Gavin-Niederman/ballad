@@ -31,26 +31,27 @@ fn startup(app: &Application) {
         loop {
             match session
                 .step_statemachine("real", Some("3636"), "firefox")
-                .await {
-                    Ok(RequestedAction::DisplayMessage(message)) => println!("message: {message}"),
-                    Ok(RequestedAction::SendDataFromPrompt { prompt, visible }) => {
-                        println!("prompt: {prompt}, visible: {visible}")
-                    }
-                    Ok(RequestedAction::ExitApplication) => {
-                        println!("Exiting");
-                        app.quit();
-                        break;
-                    }
-                    Ok(RequestedAction::None) => {},
-                    Err(GreeterError::FailedToAuthenticate) => {
-                        println!("Failed to authenticate");
-                        break;
-                    },
-                    Err(e) => {
-                        println!("Error: {e}");
-                        break;
-                    }
+                .await
+            {
+                Ok(RequestedAction::DisplayMessage(message)) => println!("message: {message}"),
+                Ok(RequestedAction::SendDataFromPrompt { prompt, visible }) => {
+                    println!("prompt: {prompt}, visible: {visible}")
                 }
+                Ok(RequestedAction::ExitApplication) => {
+                    println!("Exiting");
+                    app.quit();
+                    break;
+                }
+                Ok(RequestedAction::None) => {}
+                Err(GreeterError::FailedToAuthenticate) => {
+                    println!("Failed to authenticate");
+                    break;
+                }
+                Err(e) => {
+                    println!("Error: {e}");
+                    break;
+                }
+            }
             sleep(Duration::from_secs(1));
         }
     });

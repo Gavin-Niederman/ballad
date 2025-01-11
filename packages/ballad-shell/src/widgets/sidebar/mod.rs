@@ -2,9 +2,12 @@ pub mod battery;
 pub mod screen_bevels;
 pub mod volume;
 
-use ballad_services::upower::BATTERY_SERVICE;
+use std::cell::Cell;
+
+use ballad_services::upower::UPOWER_SERVICE;
+use gtk::glib;
 use gtk::{
-    Align, ApplicationWindow, Box, Button, CenterBox, Orientation, Separator,
+    Align, ApplicationWindow, Box, Button, CenterBox, Orientation, Separator, glib::clone,
     prelude::*,
 };
 
@@ -81,11 +84,22 @@ pub fn sidebar(
 
     lower_section.append(&quick_settings_toggle);
     lower_section.append(&lower_separator);
-    let battery_available = BATTERY_SERVICE.with(|service| service.available());
     lower_section.append(&volume);
-    if battery_available {
-        lower_section.append(&battery);
-    }
+    UPOWER_SERVICE.with(clone!(
+        #[strong]
+        battery,
+        #[weak]
+        lower_section,
+        move |service| {
+            let added = Cell::new(false);
+            service.connect_available_notify(move |service| {
+                if service.available() && !added.get() {
+                    lower_section.append(&battery);
+                    added.set(true);
+                }
+            });
+        }
+    ));
 
     container.set_start_widget(Some(&upper_section));
     container.set_end_widget(Some(&lower_section));

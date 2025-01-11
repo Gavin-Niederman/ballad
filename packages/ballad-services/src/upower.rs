@@ -162,7 +162,7 @@ mod imp {
     #[derive(Properties, Default, Debug)]
     #[properties(wrapper_type = super::UPowerService)]
     pub struct UPowerService {
-        #[property(get)]
+        #[property(get, default_value = true)]
         available: Cell<bool>,
         #[property(get)]
         percentage: Cell<f64>,
@@ -265,7 +265,16 @@ mod imp {
                     this.proxy.write().await.replace(proxy.clone());
                     this.update().await;
 
-                    let mut update_stream = proxy.inner().receive_all_signals().await.unwrap();
+                    let properties_proxy = zbus::fdo::PropertiesProxy::new(
+                        &DBUS_SYSTEM_CONNECTION,
+                        "org.freedesktop.UPower",
+                        proxy.inner().path(),
+                    )
+                    .await
+                    .unwrap();
+
+                    let mut update_stream =
+                        properties_proxy.receive_properties_changed().await.unwrap();
                     while update_stream.next().await.is_some() {
                         this.update().await;
                     }
@@ -296,5 +305,5 @@ impl Default for UPowerService {
 }
 
 thread_local! {
-    pub static BATTERY_SERVICE: LazyCell<UPowerService> = LazyCell::new(UPowerService::new);
+    pub static UPOWER_SERVICE: LazyCell<UPowerService> = LazyCell::new(UPowerService::new);
 }

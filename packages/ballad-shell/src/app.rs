@@ -1,9 +1,4 @@
-use std::{
-    cell::RefCell,
-    collections::HashMap,
-    rc::Rc,
-    sync::OnceLock,
-};
+use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::OnceLock};
 
 use crate::widgets::{
     PerMonitorWidget,
@@ -13,7 +8,11 @@ use crate::widgets::{
 };
 use ballad_config::CatppuccinFlavor;
 use gtk::{
-    gdk::{self, Display, Monitor}, glib::{clone, closure_local, ExitCode}, prelude::*, style_context_add_provider_for_display, style_context_remove_provider_for_display, Application, ApplicationWindow, CssProvider, Window
+    Application, ApplicationWindow, CssProvider, Window,
+    gdk::{self, Display, Monitor},
+    glib::{ExitCode, closure_local},
+    prelude::*,
+    style_context_add_provider_for_display, style_context_remove_provider_for_display,
 };
 use gtk::{gio, glib};
 use smol::channel::{self, Sender};
@@ -27,13 +26,22 @@ impl App {
         let (control_sender, control_receiver) = channel::bounded(1);
         _ = APP_CONTROL_SENDER.set(Sender::clone(&control_sender));
 
-        gtk::glib::spawn_future_local(clone!(#[weak] app, async move {
+        gtk::glib::spawn_future_local(async move {
             while let Ok(control) = control_receiver.recv().await {
-                match control {
-                    AppControl::Quit => app.quit(),
-                }
+                APP.with(|this| {
+                    if let Some(this) = this.borrow().as_ref() {
+                        match control {
+                            AppControl::Quit => this.quit(),
+                            AppControl::ToggleWindow(title) => {
+                                if let Some(window) = this.window_by_title(&title) {
+                                    window.set_visible(!window.is_visible());
+                                }
+                            }
+                        }
+                    }
+                });
             }
-        }));
+        });
 
         Self {
             app,
@@ -54,10 +62,15 @@ impl App {
     pub fn window_by_id(&self, id: u32) -> Option<Window> {
         self.app.window_by_id(id)
     }
+
+    pub fn quit(&self) {
+        self.app.quit();
+    }
 }
 
 pub enum AppControl {
     Quit,
+    ToggleWindow(String),
 }
 
 thread_local! {
@@ -65,9 +78,7 @@ thread_local! {
 }
 pub static APP_CONTROL_SENDER: OnceLock<Sender<AppControl>> = const { OnceLock::new() };
 
-pub fn launch_app(
-    gtk_args: Vec<String>,
-) -> Result<ExitCode, crate::Error> {
+pub fn launch_app(gtk_args: Vec<String>) -> Result<ExitCode, crate::Error> {
     gio::resources_register_include!("icons.gresource").unwrap();
 
     let application = Application::builder()

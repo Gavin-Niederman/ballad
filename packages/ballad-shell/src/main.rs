@@ -1,4 +1,4 @@
-use app::{AppControl, APP_CONTROL_SENDER};
+use app::{APP_CONTROL_SENDER, AppControl};
 use clap::Parser;
 use smol::block_on;
 use snafu::Snafu;
@@ -23,6 +23,8 @@ pub enum Command {
     Run,
     #[command(visible_alias = "q")]
     Quit,
+    #[command(visible_aliases = ["toggle", "t"])]
+    ToggleWindow { window: String },
 }
 
 pub struct BalladShell;
@@ -39,8 +41,12 @@ impl BalladShell {
             let _ = sender.try_send(AppControl::Quit);
         }
     }
+    fn toggle_window(&self, title: &str) {
+        if let Some(sender) = APP_CONTROL_SENDER.get() {
+            let _ = sender.try_send(AppControl::ToggleWindow(title.to_string()));
+        }
+    }
 }
-
 
 fn main() -> Result<(), Error> {
     let args = Args::parse();
@@ -59,21 +65,29 @@ fn main() -> Result<(), Error> {
                     return Err(Error::Gtk { code: res });
                 }
             }
-            Command::Quit => {
-                let dbus_connection = zbus::Connection::session().await?;
-                let proxy = BalladShellProxy::new(&dbus_connection).await?;
-
-                let res = proxy.quit().await;
-                if res == Err(zbus::Error::InterfaceNotFound) {
-                    return Err(Error::CloseFailed);
-                } else {
-                    res?;
-                }
-            }
+            command => send_app_command(command).await?,
         };
 
         Ok(())
     }))
+}
+
+async fn send_app_command(command: Command) -> Result<(), Error> {
+    let dbus_connection = zbus::Connection::session().await?;
+    let proxy = BalladShellProxy::new(&dbus_connection).await?;
+
+    let res = match command {
+        Command::Quit => proxy.quit().await,
+        Command::ToggleWindow { window } => proxy.toggle_window(&window).await,
+        _ => unreachable!(),
+    };
+    if res == Err(zbus::Error::InterfaceNotFound) {
+        return Err(Error::CloseFailed);
+    } else {
+        res?;
+    }
+
+    Ok(())
 }
 
 #[derive(Snafu, Debug, Clone, PartialEq)]

@@ -1,4 +1,4 @@
-use ballad_services::upower::{BATTERY_SERVICE, UPowerService};
+use ballad_services::upower::{UPOWER_SERVICE, UPowerService};
 use gtk::glib::{clone, closure_local};
 use gtk::prelude::{BoxExt, WidgetExt};
 use gtk::{Box, Stack, StackTransitionType, prelude::ObjectExt};
@@ -103,7 +103,7 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
         .mode(gtk::LevelBarMode::Continuous)
         .build();
 
-    BATTERY_SERVICE.with(clone!(
+    UPOWER_SERVICE.with(clone!(
         #[weak]
         icon_stack,
         #[weak]
@@ -156,6 +156,12 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
                         battery_bar.set_css_classes(&class_names);
                         battery_bar.set_value(battery.percentage() / 100.0);
 
+                        if battery.charging() {
+                            icon_stack.set_transition_type(StackTransitionType::SlideDown);
+                        } else {
+                            icon_stack.set_transition_type(StackTransitionType::SlideUp);
+                        }
+                        
                         icon_stack.set_visible_child_name(shown_battery_icon(
                             BatteryLevel::from_percent(battery.percentage()),
                             battery.charging(),
