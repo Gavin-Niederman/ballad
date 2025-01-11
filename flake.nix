@@ -4,12 +4,26 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+
+    naersk.url = "github:nix-community/naersk";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, naersk, rust-overlay, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
-      let 
-        pkgs = nixpkgs.legacyPackages.${system};
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ rust-overlay.overlays.default ];
+        };
+
+        naersk' = pkgs.callPackage naersk {
+          rustc = pkgs.rust-bin.nightly.latest.minimal;
+          cargo = pkgs.rust-bin.nightly.latest.minimal;
+        };
 
         greetd_stub = pkgs.rustPlatform.buildRustPackage {
           name = "greetd_stub";
@@ -57,6 +71,28 @@
 
               libxkbcommon
             ];
+        };
+        packages = rec {
+          ballad-shell = naersk'.buildPackage {
+            pname = "ballad-shell";
+            src = ./.;
+
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+
+              gtk4
+              gtk4-layer-shell
+              glib
+              librsvg
+              cairo
+
+              alsa-lib
+
+              libxkbcommon
+            ];
+          };
+
+          default = ballad-shell;
         };
       });
 }
