@@ -352,6 +352,7 @@ dependencies = [
  "grass",
  "gtk4",
  "gtk4-layer-shell",
+ "libc",
  "smol",
  "smol-macros",
  "snafu",

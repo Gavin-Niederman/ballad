@@ -1,6 +1,7 @@
 mod config;
 mod dropdown_button;
 mod flavor;
+pub mod info;
 
 use super::window::{Layer, LayershellWindow};
 use flavor::flavor_selector;
@@ -11,6 +12,7 @@ use gtk::{
     prelude::*,
 };
 use gtk4_layer_shell::{KeyboardMode, LayerShell};
+use info::user_icon;
 use typed_builder::TypedBuilder;
 
 pub const QUICK_SETTINGS_WINDOW_TITLE: &str = "quick-settings";
@@ -80,6 +82,7 @@ pub fn quick_settings(QuickSettings { application }: QuickSettings) -> Applicati
     let flavor_selector = flavor_selector();
 
     quick_settings.append(&flavor_selector);
+    // quick_settings.append(&user_icon(48));
 
     overlay.set_child(Some(&click_screen));
     overlay.add_overlay(&quick_settings);

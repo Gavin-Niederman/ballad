@@ -19,6 +19,7 @@ grass = { version = "0.13.4", default-features = false }
 chrono = "0.4.39"
 clap = { version = "4.5.24", features = ["derive"] }
 smol-macros = "0.1.1"
+libc = "0.2.169"
 
 [build-dependencies]
 glib-build-tools = "0.20.0"

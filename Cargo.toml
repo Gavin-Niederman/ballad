@@ -15,4 +15,3 @@ snafu = "0.8.5"
 ballad-services = { path = "packages/ballad-services" }
 ballad-config = { path = "packages/ballad-config" }
 ballad-search = { path = "packages/ballad-search" }
-ballad-shell = { path = "packages/ballad-shell" }
