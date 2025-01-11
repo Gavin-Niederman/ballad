@@ -12,7 +12,7 @@ use gtk::{
     prelude::*,
 };
 use gtk4_layer_shell::{KeyboardMode, LayerShell};
-use info::user_icon;
+use info::info_block;
 use typed_builder::TypedBuilder;
 
 pub const QUICK_SETTINGS_WINDOW_TITLE: &str = "quick-settings";
@@ -79,10 +79,8 @@ pub fn quick_settings(QuickSettings { application }: QuickSettings) -> Applicati
         .css_classes(["quick-settings"])
         .build();
 
-    let flavor_selector = flavor_selector();
-
-    quick_settings.append(&flavor_selector);
-    // quick_settings.append(&user_icon(48));
+    quick_settings.append(&info_block());
+    quick_settings.append(&flavor_selector());
 
     overlay.set_child(Some(&click_screen));
     overlay.add_overlay(&quick_settings);

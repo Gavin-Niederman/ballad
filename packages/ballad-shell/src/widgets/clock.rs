@@ -23,9 +23,61 @@ fn formatted_time() -> String {
     let time = chrono::Local::now();
     time.format("%T").to_string()
 }
-fn formatted_date() -> String {
+fn formatted_date_full() -> String {
     let date = chrono::Local::now();
     date.format("%A, %B %-d, %-y").to_string()
+}
+fn formatted_date_short() -> String {
+    let date = chrono::Local::now();
+    date.format("%-m/%-d/%y").to_string()
+}
+
+pub fn time() -> Label {
+    let label = Label::builder()
+        .css_classes(["time"])
+        .name("time")
+        .label(formatted_time())
+        .build();
+
+    glib::timeout_add_local(
+        Duration::from_secs(1),
+        clone!(
+            #[weak]
+            label,
+            #[upgrade_or]
+            ControlFlow::Break,
+            move || {
+                label.set_label(&formatted_time());
+                ControlFlow::Continue
+            }
+        ),
+    );
+
+    label
+}
+pub fn date() -> Label {
+    let label = Label::builder()
+        .css_classes(["date"])
+        .name("date")
+        .label(formatted_date_full())
+        .halign(Align::Start)
+        .build();
+
+    glib::timeout_add_local(
+        Duration::from_secs(1),
+        clone!(
+            #[weak]
+            label,
+            #[upgrade_or]
+            ControlFlow::Break,
+            move || {
+                label.set_label(&formatted_date_short());
+                ControlFlow::Continue
+            }
+        ),
+    );
+
+    label
 }
 
 pub fn clock_underlay(
@@ -56,7 +108,7 @@ pub fn clock_underlay(
     let date = Label::builder()
         .css_classes(["date"])
         .name("date")
-        .label(formatted_date())
+        .label(formatted_date_full())
         .halign(Align::Start)
         .build();
 
@@ -71,7 +123,7 @@ pub fn clock_underlay(
             ControlFlow::Break,
             move || {
                 time.set_label(&formatted_time());
-                date.set_label(&formatted_date());
+                date.set_label(&formatted_date_full());
                 ControlFlow::Continue
             }
         ),

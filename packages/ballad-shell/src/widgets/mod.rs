@@ -1,7 +1,7 @@
 use gtk::{Application, gdk::Monitor};
 use typed_builder::TypedBuilder;
 
-pub mod clock_underlay;
+pub mod clock;
 pub mod icon;
 pub mod quick_settings;
 pub mod sidebar;

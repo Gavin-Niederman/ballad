@@ -2,7 +2,7 @@ use std::{cell::RefCell, collections::HashMap, rc::Rc, sync::OnceLock};
 
 use crate::widgets::{
     PerMonitorWidget,
-    clock_underlay::clock_underlay,
+    clock::clock_underlay,
     quick_settings::QuickSettings,
     sidebar::{screen_bevels::screen_bevels, sidebar},
 };

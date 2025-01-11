@@ -4,6 +4,7 @@
     padding: 16px;
     border-radius: $corner-radius;
     border: 4px solid $sky;
+    color: $text;
 
     transition: $transition;
 
@@ -22,6 +23,20 @@
 
     > :not(:last-child):not(.dummy) {
         margin-bottom: 16px;
+    }
+
+    .info-block {
+        background-color: $mantle;
+        padding: 8px;
+        border-radius: $ui-radius;
+
+        .username {
+            font-size: 26px;
+        }
+        .time,.date {
+            font-family: "Anonymous Pro";
+            font-size: 16px;
+        }
     }
 }
 
