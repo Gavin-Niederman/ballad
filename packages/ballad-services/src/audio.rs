@@ -17,11 +17,7 @@ mod audio_imp {
                 );
                 return None;
             };
-            let master_audio = mixer
-                .iter()
-                .filter_map(Selem::new)
-                .find(|elem| elem.can_playback() && elem.has_playback_volume())
-                .map(|selem| selem.get_id())?;
+            let master_audio = SelemId::new("Master", 0);
 
             Some(Self {
                 mixer,
