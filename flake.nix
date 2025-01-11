@@ -75,6 +75,8 @@
         packages = rec {
           ballad-shell = naersk'.buildPackage {
             pname = "ballad-shell";
+            name = "ballad-shell";
+            version = "0.1.0";
             src = ./.;
 
             nativeBuildInputs = with pkgs; [
@@ -89,6 +91,18 @@
               alsa-lib
 
               libxkbcommon
+
+              wrapGAppsHook4
+            ];
+
+            buildInputs = with pkgs; [
+              gtk4
+              gtk4-layer-shell
+              glib
+              librsvg
+              cairo
+
+              alsa-lib
             ];
           };
 
