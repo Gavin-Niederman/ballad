@@ -2,9 +2,9 @@ use gtk::{Application, gdk::Monitor};
 use typed_builder::TypedBuilder;
 
 pub mod clock_underlay;
+pub mod icon;
 pub mod quick_settings;
 pub mod sidebar;
-pub mod symbolic_icon;
 pub mod window;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

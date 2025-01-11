@@ -15,7 +15,6 @@ $sidebar-width: 32px;
     border-radius: $ui-radius;
     background-color: $text;
     padding: 8px;
-    margin-bottom: 6px;
 
     &.active,
     &:last-child.active {
@@ -30,7 +29,6 @@ $sidebar-width: 32px;
 }
 
 .window {
-    margin-bottom: 4px;
     padding: 4px;
     border-radius: $ui-radius;
 

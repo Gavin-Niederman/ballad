@@ -7,3 +7,4 @@ edition = "2024"
 wayland-client = "0.31.7"
 smol = { workspace = true }
 smithay-client-toolkit = "0.19.2"
+zbus = { workspace = true }

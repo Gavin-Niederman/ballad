@@ -10,3 +10,5 @@ alsa = { git = "https://github.com/diwic/alsa-rs", version = "0.9.1" }
 smol = { workspace = true }
 zbus = { workspace = true }
 futures = { version = "0.3.31", default-features = false, features = ["std", "async-await"] }
+niri-ipc = "0.1.10"
+serde_json = "1.0.135"

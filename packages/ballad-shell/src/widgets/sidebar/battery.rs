@@ -5,7 +5,7 @@ use gtk::{Box, Stack, StackTransitionType, prelude::ObjectExt};
 use gtk::{Label, LevelBar, glib};
 use typed_builder::TypedBuilder;
 
-use crate::widgets::symbolic_icon::symbolic_icon;
+use crate::widgets::icon::symbolic_icon;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BatteryLevel {
@@ -161,7 +161,7 @@ pub fn battery(Battery { orientation }: Battery) -> Box {
                         } else {
                             icon_stack.set_transition_type(StackTransitionType::SlideUp);
                         }
-                        
+
                         icon_stack.set_visible_child_name(shown_battery_icon(
                             BatteryLevel::from_percent(battery.percentage()),
                             battery.charging(),

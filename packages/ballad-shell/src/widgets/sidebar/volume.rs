@@ -8,7 +8,7 @@ use gtk::{
 };
 use typed_builder::TypedBuilder;
 
-use crate::{utils::set_class_on_widget, widgets::symbolic_icon::symbolic_icon};
+use crate::{utils::set_class_on_widget, widgets::icon::symbolic_icon};
 
 #[derive(Debug, TypedBuilder, Clone, PartialEq, Eq)]
 #[builder(build_method(into = gtk::Box))]

@@ -1,4 +1,5 @@
 pub mod battery;
+pub mod niri;
 pub mod screen_bevels;
 pub mod volume;
 
@@ -15,8 +16,8 @@ use crate::app::APP;
 
 use super::{
     PerMonitorWidget,
+    icon::symbolic_icon,
     quick_settings::QUICK_SETTINGS_WINDOW_TITLE,
-    symbolic_icon::symbolic_icon,
     window::{Anchor, LayershellWindow},
 };
 
@@ -52,7 +53,7 @@ pub fn sidebar(
         .anchors(&[Anchor::Left, Anchor::Top, Anchor::Bottom])
         .application(application)
         .title(&format!("sidebar-{}", monitor.connector().unwrap()))
-        .monitor(monitor)
+        .monitor(monitor.clone())
         .auto_exclusive(true)
         .build();
 
@@ -68,6 +69,18 @@ pub fn sidebar(
         .valign(Align::Start)
         .build();
 
+    let windows = niri::windows();
+    let workspaces = niri::workspaces(monitor);
+
+    upper_section.append(&workspaces);
+    upper_section.append(
+        &Separator::builder()
+        .orientation(Orientation::Vertical)
+        .name("upper-widgets-seperator")
+        .build(),
+    );
+    upper_section.append(&windows);
+
     let lower_section = Box::builder()
         .name("lower-widgets-section")
         .orientation(Orientation::Vertical)
@@ -75,15 +88,16 @@ pub fn sidebar(
         .build();
 
     let quick_settings_toggle = quick_settings_toggle();
-    let lower_separator = Separator::builder()
-        .orientation(Orientation::Vertical)
-        .name("lower-widgets-seperator")
-        .build();
     let battery = battery::Battery::builder().build();
     let volume = volume::Volume::builder().build();
 
     lower_section.append(&quick_settings_toggle);
-    lower_section.append(&lower_separator);
+    lower_section.append(
+        &Separator::builder()
+            .orientation(Orientation::Vertical)
+            .name("lower-widgets-seperator")
+            .build(),
+    );
     lower_section.append(&volume);
     UPOWER_SERVICE.with(clone!(
         #[strong]
