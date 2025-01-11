@@ -1,6 +1,9 @@
-use std::cell::LazyCell;
+use std::{cell::LazyCell, time::Duration};
 
-use gtk::glib::{self, Object};
+use gtk::{
+    glib::{self, Object},
+    subclass::prelude::ObjectSubclassIsExt,
+};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, glib::Boxed)]
 #[boxed_type(name = "NiriOutput")]
@@ -152,6 +155,7 @@ mod imp {
     use std::cell::RefCell;
     use std::net::Shutdown;
     use std::sync::OnceLock;
+    use std::time::Duration;
 
     use futures::AsyncBufReadExt;
     use gtk::gio::ListStore;
@@ -385,6 +389,48 @@ mod imp {
                 _ => {}
             }
         }
+
+        pub async fn send_message(&self, message: niri_ipc::Request) {
+            let Ok(niri_socket_path) = std::env::var("NIRI_SOCKET") else {
+                println!("NIRI_SOCKET not set. Cannot send message to Niri.");
+                return;
+            };
+
+            let mut stream = UnixStream::connect(niri_socket_path)
+                .await
+                .expect("Failed to connect to Niri socket.");
+            stream
+                .write_all(&serde_json::to_vec(&message).unwrap())
+                .await
+                .expect("Failed to send message to Niri socket.");
+            stream
+                .shutdown(Shutdown::Write)
+                .expect("Failed to shutdown the write end of the Niri socket.");
+        }
+
+        pub async fn focus_window(&self, id: u64) {
+            self.send_message(niri_ipc::Request::Action(niri_ipc::Action::FocusWindow {
+                id,
+            }))
+            .await;
+        }
+        pub async fn focus_workspace(&self, id: u64) {
+            self.send_message(niri_ipc::Request::Action(
+                niri_ipc::Action::FocusWorkspace {
+                    reference: niri_ipc::WorkspaceReferenceArg::Id(id),
+                },
+            ))
+            .await;
+        }
+
+        pub async fn do_screen_transition(&self, delay: Option<Duration>) {
+            self.send_message(niri_ipc::Request::Action(
+                niri_ipc::Action::DoScreenTransition {
+                    delay_ms: delay.map(|d| d.as_millis() as u16),
+                },
+            ))
+            .await;
+        }
     }
 
     impl Default for NiriService {
@@ -477,6 +523,19 @@ glib::wrapper! {
 impl NiriService {
     pub fn new() -> Self {
         Object::builder().build()
+    }
+
+    pub async fn send_message(&self, message: niri_ipc::Request) {
+        self.imp().send_message(message).await;
+    }
+    pub async fn focus_window(&self, id: u64) {
+        self.imp().focus_window(id).await;
+    }
+    pub async fn focus_workspace(&self, id: u64) {
+        self.imp().focus_workspace(id).await;
+    }
+    pub async fn do_screen_transition(&self, delay: Option<Duration>) {
+        self.imp().do_screen_transition(delay).await;
     }
 }
 impl Default for NiriService {

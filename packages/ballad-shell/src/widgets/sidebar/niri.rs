@@ -9,6 +9,7 @@ use gtk::Button;
 use gtk::gdk::Monitor;
 use gtk::gio::ListStore;
 use gtk::glib;
+use gtk::glib::clone;
 use gtk::glib::closure_local;
 use gtk::prelude::*;
 
@@ -48,7 +49,15 @@ fn window(window: Window) -> Button {
         ),
     );
 
-    //TODO: nav on click
+    button.connect_clicked(clone!(
+        #[weak]
+        window,
+        move |_| {
+            NIRI_SERVICE.with(|service| {
+                smol::block_on(service.focus_window(window.id()));
+            })
+        }
+    ));
 
     button
 }
@@ -114,6 +123,16 @@ fn workspace(workspace: Workspace) -> Button {
             }
         ),
     );
+
+    button.connect_clicked(clone!(
+        #[weak]
+        workspace,
+        move |_| {
+            NIRI_SERVICE.with(|service| {
+                smol::block_on(service.focus_workspace(workspace.id()));
+            })
+        }
+    ));
 
     button
 }

@@ -75,9 +75,9 @@ pub fn sidebar(
     upper_section.append(&workspaces);
     upper_section.append(
         &Separator::builder()
-        .orientation(Orientation::Vertical)
-        .name("upper-widgets-seperator")
-        .build(),
+            .orientation(Orientation::Vertical)
+            .name("upper-widgets-seperator")
+            .build(),
     );
     upper_section.append(&windows);
 
