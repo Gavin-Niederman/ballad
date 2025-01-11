@@ -1,14 +1,27 @@
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 
-use smithay_client_toolkit::{delegate_output, delegate_registry, output::{OutputHandler, OutputState}, reexports::protocols_wlr::gamma_control::v1::client::{zwlr_gamma_control_manager_v1::ZwlrGammaControlManagerV1, zwlr_gamma_control_v1::{self, ZwlrGammaControlV1}}, registry::{ProvidesRegistryState, RegistryState}, registry_handlers};
+use smithay_client_toolkit::{
+    delegate_output, delegate_registry,
+    output::{OutputHandler, OutputState},
+    reexports::protocols_wlr::gamma_control::v1::client::{
+        zwlr_gamma_control_manager_v1::ZwlrGammaControlManagerV1,
+        zwlr_gamma_control_v1::{self, ZwlrGammaControlV1},
+    },
+    registry::{ProvidesRegistryState, RegistryState},
+    registry_handlers,
+};
+use smol::lock::RwLock;
 use wayland_client::{
-    delegate_noop, globals::{registry_queue_init, GlobalList}, Connection, Dispatch, QueueHandle
+    Connection, Dispatch, QueueHandle, delegate_noop,
+    globals::{GlobalList, registry_queue_init},
 };
 
 /// Wayland client state
 struct ClientState {
     registry_state: RegistryState,
     output_state: OutputState,
+    gamma_control_manager: ZwlrGammaControlManagerV1,
+    gamma_controllers: Vec<ZwlrGammaControlV1>,
     pub running: bool,
 }
 impl ClientState {
@@ -16,13 +29,17 @@ impl ClientState {
         Self {
             output_state: OutputState::new(registry, queue_handle),
             registry_state: RegistryState::new(registry),
+            gamma_control_manager: registry
+                .bind(queue_handle, 0..=1, ())
+                .expect("Wayland server doesn't support gamma control manager"),
+            gamma_controllers: Vec::new(),
             running: true,
         }
     }
 }
 
 struct GammaControlState {
-    gamma_step_count: Cell<u32>,
+    gamma_step_count: RwLock<u32>,
 }
 
 impl Dispatch<ZwlrGammaControlV1, GammaControlState> for ClientState {
@@ -34,15 +51,15 @@ impl Dispatch<ZwlrGammaControlV1, GammaControlState> for ClientState {
         _conn: &Connection,
         _qhandle: &wayland_client::QueueHandle<Self>,
     ) {
-        match event 
-        {
+        match event {
             zwlr_gamma_control_v1::Event::GammaSize { size } => {
-                data.gamma_step_count.set(size);
-            },
+                let mut step_count = smol::block_on(data.gamma_step_count.write());
+                *step_count = size;
+            }
             zwlr_gamma_control_v1::Event::Failed => {
                 println!("Failed to set gamma control.");
                 proxy.destroy()
-            },
+            }
             _ => unreachable!(),
         }
     }
@@ -64,29 +81,31 @@ impl OutputHandler for ClientState {
 
     fn new_output(
         &mut self,
-        conn: &Connection,
+        _conn: &Connection,
         qh: &wayland_client::QueueHandle<Self>,
         output: wayland_client::protocol::wl_output::WlOutput,
     ) {
         println!("New output: {:?}", output);
+        self.gamma_control_manager
+            .get_gamma_control(&output, qh, GammaControlState {
+                gamma_step_count: RwLock::new(0),
+            });
     }
 
     fn update_output(
         &mut self,
-        conn: &Connection,
-        qh: &wayland_client::QueueHandle<Self>,
-        output: wayland_client::protocol::wl_output::WlOutput,
+        _conn: &Connection,
+        _qh: &wayland_client::QueueHandle<Self>,
+        _output: wayland_client::protocol::wl_output::WlOutput,
     ) {
-        
     }
 
     fn output_destroyed(
         &mut self,
-        conn: &Connection,
-        qh: &wayland_client::QueueHandle<Self>,
-        output: wayland_client::protocol::wl_output::WlOutput,
+        _conn: &Connection,
+        _qh: &wayland_client::QueueHandle<Self>,
+        _output: wayland_client::protocol::wl_output::WlOutput,
     ) {
-        
     }
 }
 
@@ -96,9 +115,8 @@ delegate_noop!(ClientState: ZwlrGammaControlManagerV1);
 fn main() {
     let connection = Connection::connect_to_env().expect("Failed to find a Wayland socket.");
 
-    
     let (registry, mut event_queue) =
-    registry_queue_init(&connection).expect("Failed to init registry");
+        registry_queue_init(&connection).expect("Failed to init registry");
 
     let mut client_state = ClientState::new(&registry, &event_queue.handle());
 
