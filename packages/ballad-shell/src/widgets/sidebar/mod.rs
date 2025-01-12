@@ -1,7 +1,6 @@
 pub mod battery;
 pub mod niri;
 pub mod screen_bevels;
-pub mod volume;
 
 use std::cell::Cell;
 
@@ -14,6 +13,7 @@ use gtk::{
 
 use crate::app::APP;
 
+use super::volume::Volume;
 use super::{
     PerMonitorWidget,
     icon::symbolic_icon,
@@ -89,7 +89,7 @@ pub fn sidebar(
 
     let quick_settings_toggle = quick_settings_toggle();
     let battery = battery::Battery::builder().build();
-    let volume = volume::Volume::builder().build();
+    let volume = Volume::builder().build();
 
     lower_section.append(&quick_settings_toggle);
     lower_section.append(

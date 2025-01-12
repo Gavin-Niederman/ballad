@@ -2,7 +2,7 @@ use ballad_services::upower::{UPOWER_SERVICE, UPowerService};
 use gtk::glib::{clone, closure_local};
 use gtk::prelude::{BoxExt, WidgetExt};
 use gtk::{Box, Stack, StackTransitionType, prelude::ObjectExt};
-use gtk::{Label, LevelBar, glib};
+use gtk::{glib, Label, LevelBar};
 use typed_builder::TypedBuilder;
 
 use crate::widgets::icon::symbolic_icon;
@@ -54,7 +54,7 @@ impl From<Battery> for Box {
 
 pub fn battery(Battery { orientation }: Battery) -> Box {
     let container = Box::builder()
-        .orientation(orientation.clone().into())
+        .orientation(orientation.into())
         .name("battery-container")
         .css_classes(["battery"])
         .build();

@@ -1,8 +1,10 @@
 mod config;
 mod dropdown_button;
 mod flavor;
-pub mod info;
+mod info;
+mod brightness;
 
+use super::volume::Volume;
 use super::window::{Layer, LayershellWindow};
 use flavor::flavor_selector;
 use gtk::gdk::Key;
@@ -80,6 +82,13 @@ pub fn quick_settings(QuickSettings { application }: QuickSettings) -> Applicati
         .build();
 
     quick_settings.append(&info_block());
+    quick_settings.append(
+        &Volume::builder()
+            .orientation(super::Orientation::Horizontal)
+            .draw_value(false)
+            .build(),
+    );
+    quick_settings.append(&brightness::brightness());
     quick_settings.append(&flavor_selector());
 
     overlay.set_child(Some(&click_screen));

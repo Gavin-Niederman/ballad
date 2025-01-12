@@ -44,6 +44,8 @@
             # For ballad-greeter development
             greetd_stub
             pkgs.zbus-xmlgen
+
+            pkgs.brightnessctl
           ];
 
           nativeBuildInputs = with pkgs; [
@@ -93,6 +95,7 @@
               libxkbcommon
 
               wrapGAppsHook4
+              makeBinaryWrapper
             ];
 
             buildInputs = with pkgs; [
@@ -104,6 +107,11 @@
 
               alsa-lib
             ];
+
+            postFixup = ''
+              wrapProgram $out/bin/ballad-shell \
+                --prefix PATH : "${pkgs.lib.makeBinPath [ pkgs.brightnessctl ]}"
+            '';
           };
 
           default = ballad-shell;

@@ -1,6 +1,5 @@
 use ballad_services::accounts::{ACCOUNTS_SERVICE, User};
 use gtk::glib;
-use gtk::prelude::ObjectExt;
 use gtk::{Align, Image, Label, Orientation, Overflow, glib::clone, prelude::BoxExt};
 
 use crate::widgets::clock::{date, time};

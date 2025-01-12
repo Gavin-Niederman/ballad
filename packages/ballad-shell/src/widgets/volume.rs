@@ -2,9 +2,7 @@ use std::cell::LazyCell;
 
 use ballad_services::audio::{AUDIO_SERVICE, AudioService};
 use gtk::{
-    Button, Stack, StackTransitionType,
-    glib::{self, clone, closure_local},
-    prelude::*,
+    glib::{self, clone, closure_local}, prelude::*, Align, Button, Stack, StackTransitionType
 };
 use typed_builder::TypedBuilder;
 
@@ -15,6 +13,8 @@ use crate::{utils::set_class_on_widget, widgets::icon::symbolic_icon};
 pub struct Volume {
     #[builder(default = crate::widgets::Orientation::Vertical)]
     pub orientation: crate::widgets::Orientation,
+    #[builder(default = true)]
+    pub draw_value: bool,
 }
 impl From<Volume> for gtk::Box {
     fn from(props: Volume) -> Self {
@@ -22,9 +22,9 @@ impl From<Volume> for gtk::Box {
     }
 }
 
-pub fn volume(Volume { orientation }: Volume) -> gtk::Box {
+pub fn volume(Volume { orientation, draw_value }: Volume) -> gtk::Box {
     let volume_container = gtk::Box::builder()
-        .orientation(orientation.clone().into())
+        .orientation(orientation.into())
         .name("volume-container")
         .css_classes(["volume"])
         .build();
@@ -60,9 +60,18 @@ pub fn volume(Volume { orientation }: Volume) -> gtk::Box {
         .orientation(orientation.into())
         .css_classes(volume_bar_classes)
         .name("volume-bar")
-        .inverted(true)
         .build();
     volume_bar.set_range(0.0, 1.0);
+
+    if orientation == crate::widgets::Orientation::Horizontal {
+        volume_container.set_valign(Align::Center);
+        volume_container.set_hexpand(true);
+        volume_bar.set_hexpand(true);
+        volume_container.set_spacing(4);
+        percent_display.set_vexpand(true);
+    } else {
+        volume_bar.set_inverted(true);
+    }
 
     AUDIO_SERVICE.with(clone!(
         #[weak]
@@ -117,7 +126,9 @@ pub fn volume(Volume { orientation }: Volume) -> gtk::Box {
     ));
 
     volume_container.append(&mute_toggle);
-    volume_container.append(&percent_display);
+    if draw_value {
+        volume_container.append(&percent_display);
+    }
     volume_container.append(&volume_bar);
 
     volume_container

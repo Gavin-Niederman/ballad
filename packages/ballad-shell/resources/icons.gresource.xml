@@ -3,6 +3,7 @@
   <gresource prefix="/com/gavinniederman/ballad-shell/icons/scalable/actions">
     <file alias="bat-high-symbolic.svg">icons/bat-high-symbolic.svg</file>
     <file alias="bat-low-symbolic.svg">icons/bat-low-symbolic.svg</file>
+    <file alias="brightness-symbolic.svg">icons/brightness-symbolic.svg</file>
     <file alias="speaker-off-symbolic.svg">icons/speaker-off-symbolic.svg</file>
     <file alias="speaker-on-symbolic.svg">icons/speaker-on-symbolic.svg</file>
     <file alias="gauge-symbolic.svg">icons/gauge-symbolic.svg</file>

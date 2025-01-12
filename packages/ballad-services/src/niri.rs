@@ -220,7 +220,6 @@ mod imp {
                             .filter_map(|window| window.ok())
                             .find(|window| window.id() == id)
                         else {
-                            dbg!("Active window not found.");
                             return;
                         };
                         window.imp().is_active.set(true);
