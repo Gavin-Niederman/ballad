@@ -357,7 +357,9 @@ mod user_imp {
                 #[weak(rename_to = this)]
                 self,
                 async move {
+                    dbg!();
                     let proxy = this.proxy.read().await;
+                    dbg!(&proxy);
                     let mut stream = proxy
                         .as_ref()
                         .unwrap()

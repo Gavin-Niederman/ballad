@@ -27,11 +27,14 @@
 
     .info-block {
         transition: background-color $transition-length;
-        
+
         background-color: $mantle;
         padding: 8px;
         border-radius: $ui-radius;
 
+        .user-icon {
+            border-radius: 100%;
+        }
         .username {
             font-size: 26px;
         }
