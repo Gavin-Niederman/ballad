@@ -31,6 +31,14 @@ pub enum OptionalId {
     #[default]
     None,
 }
+impl OptionalId {
+    pub fn as_option(&self) -> Option<u64> {
+        match self {
+            Self::Id(id) => Some(*id),
+            Self::None => None,
+        }
+    }
+}
 
 impl From<Option<u64>> for OptionalId {
     fn from(id: Option<u64>) -> Self {
@@ -42,10 +50,7 @@ impl From<Option<u64>> for OptionalId {
 }
 impl From<OptionalId> for Option<u64> {
     fn from(id: OptionalId) -> Self {
-        match id {
-            OptionalId::Id(id) => Some(id),
-            OptionalId::None => None,
-        }
+        id.as_option()
     }
 }
 
@@ -385,6 +390,42 @@ mod imp {
                             }
                         });
                     }
+                }
+                niri_ipc::Event::WorkspaceActiveWindowChanged {
+                    workspace_id,
+                    active_window_id,
+                } => {
+                    for workspace in self.workspaces.borrow().iter::<Workspace>() {
+                        let Ok(workspace) = workspace else {
+                            continue;
+                        };
+
+                        if workspace
+                            .active_window_id()
+                            .as_option()
+                            .is_some_and(|_| workspace.id() == workspace_id)
+                        {
+                            let last_active_id =
+                                workspace.active_window_id().as_option().unwrap_or_default();
+                            let last_active = self.window_by_id(last_active_id);
+                            if let Some(window) = last_active {
+                                window.imp().is_active.set(false);
+                                window.notify_is_active();
+                                window.emit_by_name::<()>("changed", &[]);
+                            }
+
+                            workspace
+                                .imp()
+                                .active_window_id
+                                .set(active_window_id.into());
+                            workspace.notify_active_window_id();
+                            workspace.emit_by_name::<()>("changed", &[]);
+
+                            break;
+                        }
+                    }
+
+                    self.update_active_windows();
                 }
                 _ => {}
             }
