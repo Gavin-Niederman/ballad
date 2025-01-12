@@ -1,0 +1,9 @@
+[package]
+name = "ballad-settings"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gtk = { workspace = true }
+ballad-services = { workspace = true }
+smol = { workspace = true }

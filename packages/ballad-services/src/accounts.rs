@@ -580,6 +580,11 @@ impl AccountsService {
     pub async fn find_user_by_id(&self, id: u64) -> Option<User> {
         self.imp().find_user_by_id(id).await
     }
+
+    pub async fn current_user(&self) -> Option<User> {
+        let uid = unsafe { libc::getuid() };
+        self.find_user_by_id(uid as u64).await
+    }
 }
 impl Default for AccountsService {
     fn default() -> Self {

@@ -333,10 +333,20 @@ dependencies = [
  "ballad-config",
  "futures",
  "gtk4",
+ "libc",
  "niri-ipc",
  "serde_json",
  "smol",
  "zbus",
+]
+
+[[package]]
+name = "ballad-settings"
+version = "0.1.0"
+dependencies = [
+ "ballad-services",
+ "gtk4",
+ "smol",
 ]
 
 [[package]]
@@ -1565,9 +1575,9 @@ dependencies = [
 
 [[package]]
 name = "niri-ipc"
-version = "0.1.10"
+version = "25.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4aa541cad3b426dd1ab72765ba71d1c20a1b8a17d80c692b099a759074f74242"
+checksum = "b7c1f0aac0ed080c4ca82b805cffc2cfba701bf3cd59e32dea3d18f263e0d236"
 dependencies = [
  "serde",
  "serde_json",

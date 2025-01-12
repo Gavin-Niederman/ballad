@@ -75,9 +75,9 @@
             ];
         };
         packages = rec {
-          ballad-shell = naersk'.buildPackage {
-            pname = "ballad-shell";
-            name = "ballad-shell";
+          ballad = naersk'.buildPackage {
+            pname = "ballad";
+            name = "ballad";
             version = "0.1.0";
             src = ./.;
 
@@ -108,7 +108,7 @@
             ];
           };
 
-          default = ballad-shell;
+          default = ballad;
         };
       });
 }
