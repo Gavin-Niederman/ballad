@@ -29,6 +29,9 @@ $sidebar-width: 32px;
 }
 
 .window {
+    transition: background-color $transition-length;
+    background-color: $base;
+
     padding: 4px;
     border-radius: $ui-radius;
 
