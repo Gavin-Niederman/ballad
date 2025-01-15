@@ -1,5 +1,6 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.10",
   "features": {
-  }
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get install -y pkg-config libgtk-4-dev libgtk4-layer-shell-dev libglib2.0-dev librsvg2-dev libcairo2-dev libasound2-dev libxkbcommon-dev"
 }
