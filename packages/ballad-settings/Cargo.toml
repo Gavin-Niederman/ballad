@@ -6,4 +6,6 @@ edition = "2024"
 [dependencies]
 gtk = { workspace = true }
 ballad-services = { workspace = true }
+ballad-config = { workspace = true }
 smol = { workspace = true }
+typed-builder = { workspace = true }

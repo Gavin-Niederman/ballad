@@ -14,7 +14,7 @@ zbus = { workspace = true }
 gtk = { workspace = true }
 gtk4-layer-shell = { workspace = true }
 
-typed-builder = "0.20.0"
+typed-builder = { workspace = true } 
 grass = { version = "0.13.4", default-features = false }
 chrono = "0.4.39"
 clap = { version = "4.5.24", features = ["derive"] }

@@ -1,18 +1,9 @@
 use ballad_services::accounts::ACCOUNTS_SERVICE;
-use gtk::{
-    gio::Cancellable, prelude::{BoxExt, ButtonExt, FileExt}, Button, FileDialog, FileFilter, Window
-};
+use gtk::{Button, Entry, FileDialog, FileFilter, Window, gio::Cancellable, prelude::*};
 
-use super::option;
+use super::{Page, option};
 
 pub fn user_page() -> gtk::Box {
-    let container = gtk::Box::builder()
-        .orientation(gtk::Orientation::Vertical)
-        .css_classes(["page"])
-        .name("user-page")
-        .spacing(12)
-        .build();
-
     let icon_file_open_button = Button::builder()
         .label("Open File")
         .name("icon-file-open-button")
@@ -26,15 +17,54 @@ pub fn user_page() -> gtk::Box {
         dialog.open(None::<&Window>, Cancellable::NONE, |response| {
             gtk::glib::spawn_future_local(async move {
                 if let Ok(file) = response {
-                    if let Some(user) = ACCOUNTS_SERVICE.with(|service| smol::block_on(service.current_user())) {
+                    if let Some(user) =
+                        ACCOUNTS_SERVICE.with(|service| smol::block_on(service.current_user()))
+                    {
                         _ = user.set_icon(file.path().unwrap()).await;
                     }
                 }
             });
         });
     });
-    
-    container.append(&option("Icon", &icon_file_open_button));
 
-    container
+    let name_input = Entry::builder()
+        .visible(true)
+        .name("name-input")
+        .placeholder_text("Real Name")
+        .build();
+    name_input.connect_activate(|entry| {
+        if let Some(user) = ACCOUNTS_SERVICE.with(|service| smol::block_on(service.current_user()))
+        {
+            _ = smol::block_on(user.set_real_name(entry.text().as_str()));
+            entry.set_text("");
+        }
+    });
+
+    let email_input = Entry::builder()
+        .visible(true)
+        .name("email-input")
+        .placeholder_text("j.doe@example.com")
+        .build();
+    email_input.connect_activate(|entry| {
+        if let Some(user) = ACCOUNTS_SERVICE.with(|service| smol::block_on(service.current_user()))
+        {
+            _ = smol::block_on(user.set_email(entry.text().as_str()));
+            entry.set_text("");
+        }
+    });
+
+    Page::builder()
+        .name("user-page")
+        .with_option(&option("Email", Some("The user's email"), &email_input))
+        .with_option(&option(
+            "Name",
+            Some("The user's \"real name\" that appears in place of the username"),
+            &name_input,
+        ))
+        .with_option(&option(
+            "Icon",
+            Some("The user's icon image"),
+            &icon_file_open_button,
+        ))
+        .build()
 }
