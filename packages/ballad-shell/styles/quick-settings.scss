@@ -1,9 +1,9 @@
 .quick-settings {
     margin: 12px;
-    background-color: $crust;
+    background-color: $bg_2;
     padding: 16px;
     border-radius: $corner-radius;
-    border: 4px solid $sky;
+    border: 4px solid $blue;
     color: $text;
 
     transition: $transition;
@@ -28,7 +28,7 @@
     .info-block {
         transition: background-color $transition-length;
 
-        background-color: $mantle;
+        background-color: $bg_1;
         padding: 8px;
         border-radius: $ui-radius;
 
@@ -47,7 +47,7 @@
 
 .dropdown-button {
     &.toggled {
-        background-color: $sky;
+        background-color: $blue;
     }
 
     background-color: $surface-0;
@@ -60,7 +60,7 @@
     }
 
     &:not(.toggled) .toggle-button-child:hover {
-        color: $base;
+        color: $bg_0;
     }
 
     &.dropped .toggle-container .toggle-button-child {
@@ -69,12 +69,12 @@
     }
 
     .toggle-button-child {
-        color: $base;
+        color: $bg_0;
         transition: $transition;
         padding: 8px;
 
         &:hover {
-            background-color: $lavender;
+            background-color: $purple;
         }
     }
 
@@ -114,11 +114,11 @@
     color: $text;
 
     &:hover {
-        color: $sky;
+        color: $blue;
     }
 
     &.active {
-        color: $sky;
+        color: $blue;
     }
 }
 

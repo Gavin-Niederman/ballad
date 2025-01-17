@@ -3,14 +3,14 @@
 }
 
 .logout-menu-option {
-    background-color: $base;
+    background-color: $bg_0;
     color: $text;
     border-radius: $corner-radius;
     padding: 16px;
     transition: $transition;
 
     &:hover {
-        background-color: $sky;
-        color: $base;
+        background-color: $blue;
+        color: $bg_0;
     }
 }

@@ -97,7 +97,7 @@ pub fn dropdown_button<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static>(
         #[weak]
         toggled,
         move |_| {
-            toggled.set_value_typed(!toggled.value_typed().unwrap_or(false));
+            toggled.set_value_typed(!toggled.value_typed::<bool>().unwrap());
             if let Some(on_toggle) = on_toggle.as_ref() {
                 on_toggle(toggled.value_typed().unwrap_or(false));
             }

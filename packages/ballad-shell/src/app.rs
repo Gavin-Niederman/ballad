@@ -6,7 +6,6 @@ use crate::widgets::{
     quick_settings::QuickSettings,
     sidebar::{screen_bevels::screen_bevels, sidebar},
 };
-use ballad_config::CatppuccinFlavor;
 use gtk::{
     Application, ApplicationWindow, CssProvider, Window,
     gdk::{self, Display, Monitor},
@@ -155,11 +154,11 @@ fn startup(_app: &Application) {
 }
 
 fn watch_theme_config() {
-    let config = ballad_config::get_or_init_shell_config();
-    let initial_css = crate::style::compile_scss_for_flavor(config.theme.catppuccin_flavor);
-
     // The CSS provider is replaced when the theme changes.
     let provider = Rc::new(RefCell::new(CssProvider::new()));
+
+    let config = ballad_config::get_or_init_shell_config();
+    let initial_css = crate::style::compile_scss_for_config(&config.theme).unwrap();
     // Load the initial CSS.
     provider.borrow().load_from_string(&initial_css);
     style_context_add_provider_for_display(
@@ -179,42 +178,42 @@ fn watch_theme_config() {
                 provider,
                 move |_: ballad_services::config::ConfigService,
                       config: &ballad_config::ThemeConfig| {
-                    let new_css = crate::style::compile_scss_for_flavor(config.catppuccin_flavor);
-                    let new_provider = CssProvider::new();
-                    new_provider.load_from_string(&new_css);
+                    if let Some(new_css) = crate::style::compile_scss_for_config(config) {
+                        let new_provider = CssProvider::new();
+                        new_provider.load_from_string(&new_css);
 
-                    style_context_remove_provider_for_display(
-                        &Display::default().unwrap(),
-                        &*provider.borrow(),
-                    );
-                    style_context_add_provider_for_display(
-                        &Display::default().unwrap(),
-                        &new_provider,
-                        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-                    );
+                        style_context_remove_provider_for_display(
+                            &Display::default().unwrap(),
+                            &*provider.borrow(),
+                        );
+                        style_context_add_provider_for_display(
+                            &Display::default().unwrap(),
+                            &new_provider,
+                            gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+                        );
 
-                    provider.replace(new_provider);
-
+                        provider.replace(new_provider);
+                    }
                     // Set the system GTK theme based on our theme config.
-                    //TODO: With custom theme support this will need a complete rework.
-                    //TODO: Maybe each theme should have an associated GTK theme?
-                    let color = if config.catppuccin_flavor.is_dark() {
+                    let color = if config.selected_theme.is_dark().unwrap_or(true) {
                         "prefer-dark"
                     } else {
                         "prefer-light"
                     };
                     let _ = theme_settings.set_string("color-scheme", color);
-                    let flavor_stringified = match config.catppuccin_flavor {
-                        CatppuccinFlavor::Latte => "latte",
-                        CatppuccinFlavor::Frappe => "frappe",
-                        CatppuccinFlavor::Macchiato => "macchiato",
-                        CatppuccinFlavor::Mocha => "mocha",
-                    };
-                    let _ = theme_settings.set_string("gtk-theme", "");
-                    let _ = theme_settings.set_string(
-                        "gtk-theme",
-                        &format!("catppuccin-{flavor_stringified}-sky-standard"),
-                    );
+
+                    let theme = config
+                        .selected_theme
+                        .theme()
+                        .and_then(|t| t.gtk_theme)
+                        .unwrap_or(if config.selected_theme.is_dark().unwrap_or(true) {
+                            config.default_dark_gtk_theme.clone()
+                        } else {
+                            config.default_light_gtk_theme.clone()
+                        });
+
+                    // let _ = theme_settings.set_string("gtk-theme", "");
+                    let _ = theme_settings.set_string("gtk-theme", &theme);
                 }
             ),
         );

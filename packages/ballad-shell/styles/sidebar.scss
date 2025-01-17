@@ -1,7 +1,7 @@
 $sidebar-width: 32px;
 
 .sidebar-container {
-    background-color: $mantle;
+    background-color: $bg_1;
     min-width: $sidebar-width;
     padding-top: 28px;
     padding-bottom: 28px;
@@ -18,7 +18,7 @@ $sidebar-width: 32px;
 
     &.active,
     &:last-child.active {
-        background-color: $peach;
+        background-color: $orange;
         min-height: 12px;
     }
 
@@ -30,17 +30,17 @@ $sidebar-width: 32px;
 
 .window {
     transition: background-color $transition-length;
-    background-color: $base;
+    background-color: $bg_0;
 
     padding: 4px;
     border-radius: $ui-radius;
 
     &.active {
-        background-color: $sky;
+        background-color: $blue;
     }
 
     &.focused {
-        background-color: $peach;
+        background-color: $orange;
     }
 }
 
@@ -63,11 +63,11 @@ $sidebar-width: 32px;
     }
 
     &.low trough block.filled {
-        background-color: $maroon;
+        background-color: $orange;
     }
 
     &.medium trough block.filled {
-        background-color: $peach;
+        background-color: $pink;
     }
 
     &.high trough block.filled {
@@ -96,6 +96,6 @@ $sidebar-width: 32px;
         border-radius: $corner-radius;
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
-        box-shadow: 0 0 0 $sidebar-width $mantle;
+        box-shadow: 0 0 0 $sidebar-width $bg_1;
     }
 }

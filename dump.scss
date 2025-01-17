@@ -1,0 +1,399 @@
+@use "sass:math";
+$pink: #f4b8e4;
+$orange: #ea999c;
+$red: #e78284;
+$yellow: #e5c890;
+$green: #a6d189;
+$blue: #99d1db;
+$blue: #99d1db;
+$purple: #babbf1;
+
+$text: #c6d0f5;
+$subtext-1: #b5bfe2;
+$subtext-0: #a5adce;
+
+$overlay-2: #949cbb;
+$overlay-1: #838ba7;
+$overlay-0: #737994;
+
+$surface-2: #626880;
+$surface-1: #51576d;
+$surface-0: #414559;
+
+$bg_0: #303446;
+$bg_1: #292c3c;
+$bg_2: #232634;
+
+$corner-radius: 16px;
+$ui-radius: 8px;
+$transition-length: 0.2s;
+$transition: all $transition-length;
+window {
+    background: transparent;
+}
+
+window,
+window > * {
+    transition:
+        background-color $transition-length,
+        box-shadow $transition-length;
+}
+
+separator {
+    border-top: 2px solid $blue;
+
+    &.vertical {
+        margin-top: 8px;
+        margin-bottom: 8px;
+        margin-left: 4px;
+        margin-right: 4px;
+    }
+
+    &.horizontal {
+        margin-left: 8px;
+        margin-right: 8px;
+    }
+}
+
+$slider-size: 16px;
+
+scale {
+    trough {
+        background-color: $surface-0;
+        border-radius: $ui-radius;
+    }
+}
+
+levelbar,
+scale {
+    border-radius: $ui-radius;
+    * {
+        transition: $transition;
+    }
+
+    &.vertical {
+        trough {
+            min-height: 64px;
+        }
+
+        highlight {
+            min-width: $slider-size;
+        }
+    }
+
+    &.horizontal {
+        trough {
+            min-width: 64px;
+        }
+
+        highlight {
+            min-height: $slider-size;
+        }
+    }
+
+    .filled,
+    highlight {
+        border-radius: $slider-size;
+        background-color: $blue;
+    }
+
+    .empty {
+        border-radius: $ui-radius;
+        background-color: $surface-0;
+    }
+}
+
+menu {
+    background-color: $surface-0;
+    padding: 8px;
+    border-radius: $ui-radius;
+}
+
+* {
+    all: unset;
+}
+
+$sidebar-width: 32px;
+
+.sidebar-container {
+    background-color: $bg_1;
+    min-width: $sidebar-width;
+    padding-top: 28px;
+    padding-bottom: 28px;
+
+    label {
+        transition: $transition;
+    }
+}
+
+.workspace {
+    border-radius: $ui-radius;
+    background-color: $text;
+    padding: 8px;
+
+    &.active,
+    &:last-child.active {
+        background-color: $orange;
+        min-height: 12px;
+    }
+
+    &:last-child {
+        background-color: $surface-0;
+        margin-bottom: 0;
+    }
+}
+
+.window {
+    transition: background-color $transition-length;
+    background-color: $bg_0;
+
+    padding: 4px;
+    border-radius: $ui-radius;
+
+    &.active {
+        background-color: $blue;
+    }
+
+    &.focused {
+        background-color: $orange;
+    }
+}
+
+.percent-display {
+    font-size: 0.8rem;
+    color: $text;
+    margin-bottom: 4px;
+    font-family: "Anonymous Pro", monospace;
+    font-weight: bold;
+}
+
+.battery-bar {
+    trough {
+        margin-right: 8px;
+        margin-left: 8px;
+    }
+
+    &.critical trough block.filled {
+        background-color: $red;
+    }
+
+    &.low trough block.filled {
+        background-color: $orange;
+    }
+
+    &.medium trough block.filled {
+        background-color: $pink;
+    }
+
+    &.high trough block.filled {
+        background-color: $yellow;
+    }
+
+    &.full trough block.filled {
+        background-color: $green;
+    }
+
+    &.charging trough block.filled {
+        background-color: $green;
+    }
+}
+
+.screen-bevels {
+    * {
+        transition: $transition;
+    }
+    
+    .shadow {
+        box-shadow: inset 8px 0 8px -8px transparentize(#000, 0.2);
+    }
+
+    box.bevels {
+        border-radius: $corner-radius;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        box-shadow: 0 0 0 $sidebar-width $bg_1;
+    }
+}
+
+.volume-bar {
+    &.vertical trough {
+        margin-bottom: 8px;
+    }
+    &.muted trough highlight {
+        background-color: $surface-1;
+    }
+}
+
+image.symbolic {
+    transition: $transition;
+    color: $text;
+}
+.icon-container.hoverable:hover image.symbolic {
+    color: $blue;
+}
+
+.quick-settings {
+    margin: 12px;
+    background-color: $bg_2;
+    padding: 16px;
+    border-radius: $corner-radius;
+    border: 4px solid $blue;
+    color: $text;
+
+    transition: $transition;
+
+    font-family: "Lato", sans-serif;
+    font-size: 1.1rem;
+
+    scale.horizontal trough {
+        min-width: 120px;
+    }
+
+    .slider-row {
+        image {
+            margin-right: 4px;
+        }
+    }
+
+    > :not(:last-child):not(.dummy) {
+        margin-bottom: 16px;
+    }
+
+    .info-block {
+        transition: background-color $transition-length;
+
+        background-color: $bg_1;
+        padding: 8px;
+        border-radius: $ui-radius;
+
+        .user-icon {
+            border-radius: 100%;
+        }
+        .username {
+            font-size: 26px;
+        }
+        .time,.date {
+            font-family: "Anonymous Pro";
+            font-size: 16px;
+        }
+    }
+}
+
+.dropdown-button {
+    &.toggled {
+        background-color: $blue;
+    }
+
+    background-color: $surface-0;
+    transition: $transition;
+
+    border-radius: $ui-radius;
+
+    &:not(.toggled) .toggle-button-child {
+        color: $text;
+    }
+
+    &:not(.toggled) .toggle-button-child:hover {
+        color: $bg_0;
+    }
+
+    &.dropped .toggle-container .toggle-button-child {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .toggle-button-child {
+        color: $bg_0;
+        transition: $transition;
+        padding: 8px;
+
+        &:hover {
+            background-color: $purple;
+        }
+    }
+
+    .toggle-button-dropdown image {
+        transition: -gtk-icon-transform $transition-length;
+    }
+    &.dropped .toggle-button-dropdown image {
+        -gtk-icon-transform: rotate(90deg);
+    }
+
+    .toggle-container {
+        :first-child {
+            border-top-left-radius: $ui-radius;
+            border-bottom-left-radius: $ui-radius;
+        }
+    
+        :last-child {
+            border-top-right-radius: $ui-radius;
+            border-bottom-right-radius: $ui-radius;
+        }
+    }
+
+    .revealer-content-container {
+        box-shadow: inset 0px 10px 8px -4px transparentize(#000, 0.75);
+        background-color: $surface-0;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        border-bottom-left-radius: $ui-radius;
+        border-bottom-right-radius: $ui-radius;
+        transition: $transition;
+        padding: 8px;
+    }
+}
+
+.toggle-button-dropdown-option {
+    transition: $transition;
+    color: $text;
+
+    &:hover {
+        color: $blue;
+    }
+
+    &.active {
+        color: $blue;
+    }
+}
+
+.power-profile-label {
+    min-width: 128px;
+}
+
+.clock {
+    margin-right: 50px;
+    margin-bottom: 50px;
+    transition: all 1s;
+    color: $text;
+    font-family: "Anonymous Pro", monospace;
+
+    .time {
+        font-size: 7rem;
+    }
+
+    .date {
+        font-size: 1.7rem;
+    }
+}
+
+.clock-underlay.light .clock {
+    color: $bg_0;
+}
+
+.logout-menu {
+    background-color: transparentize(#000, 0.5);
+}
+
+.logout-menu-option {
+    background-color: $bg_0;
+    color: $text;
+    border-radius: $corner-radius;
+    padding: 16px;
+    transition: $transition;
+
+    &:hover {
+        background-color: $blue;
+        color: $bg_0;
+    }
+}
+

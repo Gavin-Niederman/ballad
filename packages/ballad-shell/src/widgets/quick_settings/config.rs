@@ -1,6 +1,6 @@
 use std::cell::LazyCell;
 
-use ballad_config::{CatppuccinFlavor, ShellConfig, ThemeConfig};
+use ballad_config::{ShellConfig, ThemeConfig};
 use ballad_services::{
     config::CONFIG_SERVICE,
     variable::{Variable, VariableInner},
@@ -10,7 +10,7 @@ use gtk::{
     prelude::ObjectExt,
 };
 
-pub fn on_theme_button_press(retained_dark_flavor: Variable) -> impl Fn(bool) + 'static {
+pub fn on_theme_button_press(retained_light_flavor: Variable, retained_dark_flavor: Variable) -> impl Fn(bool) + 'static {
     CONFIG_SERVICE.with(|config_service| {
         let config_service = LazyCell::force(config_service).clone();
 
@@ -20,14 +20,16 @@ pub fn on_theme_button_press(retained_dark_flavor: Variable) -> impl Fn(bool) + 
             if !dark {
                 config_service.set_shell_config(ShellConfig {
                     theme: ThemeConfig {
-                        catppuccin_flavor: CatppuccinFlavor::Latte,
+                        selected_theme: retained_light_flavor.value_typed().unwrap(),
+                        ..current_config.theme
                     },
                     ..current_config
                 });
             } else {
                 config_service.set_shell_config(ShellConfig {
                     theme: ThemeConfig {
-                        catppuccin_flavor: retained_dark_flavor.value_typed().unwrap(),
+                        selected_theme: retained_dark_flavor.value_typed().unwrap(),
+                        ..current_config.theme
                     },
                     ..current_config
                 });
@@ -41,8 +43,9 @@ pub fn dark_theme_toggle_variable() -> Variable {
         config_service
             .shell_config()
             .theme
-            .catppuccin_flavor
+            .selected_theme
             .is_dark()
+            .unwrap_or_default()
     });
     let variable = Variable::with_value(initial.into());
 
@@ -60,7 +63,7 @@ pub fn dark_theme_toggle_variable() -> Variable {
                 )
                 .transform_to(|_, config: ShellConfig| {
                     Some(VariableInner::from(Variant::from(
-                        config.theme.catppuccin_flavor.is_dark(),
+                        config.theme.selected_theme.is_dark().unwrap(),
                     )))
                 })
                 .build();

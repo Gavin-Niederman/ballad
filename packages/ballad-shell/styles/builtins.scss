@@ -10,7 +10,7 @@ window > * {
 }
 
 separator {
-    border-top: 2px solid $sky;
+    border-top: 2px solid $blue;
 
     &.vertical {
         margin-top: 8px;
@@ -64,7 +64,7 @@ scale {
     .filled,
     highlight {
         border-radius: $slider-size;
-        background-color: $sky;
+        background-color: $blue;
     }
 
     .empty {

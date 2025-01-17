@@ -1,6 +1,5 @@
 use std::time::Duration;
 
-use ballad_config::CatppuccinFlavor;
 use ballad_config::ThemeConfig;
 use ballad_services::config::CONFIG_SERVICE;
 use ballad_services::config::ConfigService;
@@ -131,10 +130,14 @@ pub fn clock_underlay(
 
     CONFIG_SERVICE.with(|service| {
         fn clock_underlay_classes(config: &ThemeConfig) -> Vec<&str> {
-            vec!["clock-underlay", match config.catppuccin_flavor {
-                CatppuccinFlavor::Latte => "light",
-                _ => "dark",
-            }]
+            vec![
+                "clock-underlay",
+                if config.selected_theme.is_light().unwrap_or(false) {
+                    "light"
+                } else {
+                    "dark"
+                },
+            ]
         }
 
         service.connect_closure("shell-theme-config-changed", false, {

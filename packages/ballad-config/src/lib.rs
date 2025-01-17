@@ -1,35 +1,12 @@
+pub mod theme;
+
 #[cfg(feature = "gtk")]
 use gtk::glib;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "gtk", derive(glib::Enum, glib::Variant))]
-#[cfg_attr(feature = "gtk", enum_type(name = "CatppuccinFlavor"))]
-pub enum CatppuccinFlavor {
-    Frappe,
-    #[default]
-    Macchiato,
-    Mocha,
-    Latte,
-}
-
-impl CatppuccinFlavor {
-    pub fn is_light(&self) -> bool {
-        matches!(self, CatppuccinFlavor::Latte)
-    }
-    pub fn is_dark(&self) -> bool {
-        !self.is_light()
-    }
-}
-
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "gtk", derive(glib::Boxed, glib::Variant))]
-#[cfg_attr(feature = "gtk", boxed_type(name = "ThemeConfig"))]
-pub struct ThemeConfig {
-    pub catppuccin_flavor: CatppuccinFlavor,
-}
+pub use theme::{ThemeConfig, ThemeSelection};
 
 #[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "gtk", derive(glib::Enum, glib::Variant))]
@@ -48,7 +25,7 @@ pub struct PowerProfilesConfig {
     pub enabled: bool,
 }
 
-#[derive(Default, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "gtk", derive(glib::Boxed, glib::Variant))]
 #[cfg_attr(feature = "gtk", boxed_type(name = "ShellConfig"))]
 pub struct ShellConfig {
