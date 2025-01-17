@@ -1,35 +1,38 @@
 use std::{cell::LazyCell, collections::HashMap};
 
 use super::{Page, option};
-use ballad_config::{CatppuccinFlavor, ShellConfig, ThemeConfig};
+use ballad_config::{ShellConfig, ThemeConfig, theme::get_or_init_all_theme_selections};
 use ballad_services::config::CONFIG_SERVICE;
-use gtk::{DropDown, ListItemFactory, StringList, prelude::*};
+use gtk::DropDown;
 
 pub fn shell_page() -> gtk::Box {
-    let theme_options: HashMap<_, _> = [
-        ("Frappé", CatppuccinFlavor::Frappe),
-        ("Macchiato", CatppuccinFlavor::Macchiato),
-        ("Mocha", CatppuccinFlavor::Mocha),
-        ("Latte", CatppuccinFlavor::Latte),
-    ]
-    .into_iter()
-    .collect();
-    let theme_selector = DropDown::from_strings(&theme_options.keys().copied().collect::<Vec<_>>());
+    let theme_options = get_or_init_all_theme_selections();
+
+    let theme_option_strings = theme_options
+        .iter()
+        .map(|option| option.theme().unwrap().name.clone())
+        .collect::<Vec<_>>();
+    let theme_selector = DropDown::from_strings(
+        &theme_option_strings
+            .iter()
+            .map(|s| s.as_str())
+            .collect::<Vec<_>>(),
+    );
 
     CONFIG_SERVICE.with(|service| {
         let service = LazyCell::force(service).clone();
-        let theme = service.shell_config().theme.catppuccin_flavor;
-        theme_selector
-            .set_selected(theme_options.iter().position(|(_, v)| v == &theme).unwrap() as u32);
+        let theme = service.shell_config().theme.selected_theme;
+        theme_selector.set_selected(theme_options.iter().position(|v| *v == theme).unwrap() as u32);
 
         theme_selector.connect_selected_notify(move |combo| {
-            let theme = theme_options.keys().nth(combo.selected() as usize).unwrap();
-            let theme = theme_options.get(theme).unwrap();
+            let theme = theme_options.get(combo.selected() as usize).unwrap();
+            let config = service.shell_config();
             service.set_shell_config(ShellConfig {
                 theme: ThemeConfig {
-                    catppuccin_flavor: *theme,
+                    selected_theme: theme.clone(),
+                    ..config.theme
                 },
-                ..service.shell_config()
+                ..config
             });
         })
     });
