@@ -36,7 +36,7 @@ mod imp {
             ) else {
                 return;
             };
-            
+
             let max_brightness = String::from_utf8(max_brightness.stdout)
                 .unwrap()
                 .trim()
@@ -83,18 +83,18 @@ mod imp {
                 self,
                 async move {
                     let Some(device) = smol::process::Command::new("ls")
-                    .args(["-w1", "/sys/class/backlight/"])
-                    .output()
-                    .await
-                    .ok()
-                    .map(|output| {
-                        String::from_utf8(output.stdout)
-                        .unwrap()
-                        .lines()
-                        .next()
-                        .unwrap()
-                        .to_string()
-                    })
+                        .args(["-w1", "/sys/class/backlight/"])
+                        .output()
+                        .await
+                        .ok()
+                        .map(|output| {
+                            String::from_utf8(output.stdout)
+                                .unwrap()
+                                .lines()
+                                .next()
+                                .unwrap()
+                                .to_string()
+                        })
                     else {
                         println!(
                             "No backlight devices found. Brightness service will not function!"
@@ -102,10 +102,10 @@ mod imp {
                         return;
                     };
                     this.device.replace(Some(device.to_string()));
-                    
+
                     this.available.set(true);
                     this.obj().notify_available();
-                    
+
                     this.update().await;
 
                     let f = gtk::gio::File::for_path(format!(

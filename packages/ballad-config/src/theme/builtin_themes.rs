@@ -25,7 +25,7 @@ pub fn catppuccin_latte() -> Theme {
         },
         variant: (ThemeVariant::Light),
         name: "Catppuccin Latte".to_string(),
-        gtk_theme: Some("catppuccin-latte-sky-standard".to_string())
+        gtk_theme: Some("catppuccin-latte-sky-standard".to_string()),
     }
 }
 
@@ -54,7 +54,7 @@ pub fn catppuccin_frappe() -> Theme {
         },
         variant: (ThemeVariant::Dark),
         name: "Catppuccin Frappé".to_string(),
-        gtk_theme: Some("catppuccin-frappe-sky-standard".to_string())
+        gtk_theme: Some("catppuccin-frappe-sky-standard".to_string()),
     }
 }
 
@@ -83,7 +83,7 @@ pub fn catppuccin_macchiato() -> Theme {
         },
         variant: (ThemeVariant::Dark),
         name: "Catppuccin Macchiato".to_string(),
-        gtk_theme: Some("catppuccin-macchiato-sky-standard".to_string())
+        gtk_theme: Some("catppuccin-macchiato-sky-standard".to_string()),
     }
 }
 
@@ -112,6 +112,6 @@ pub fn catppuccin_mocha() -> Theme {
         },
         variant: (ThemeVariant::Dark),
         name: "Catppuccin Mocha".to_string(),
-        gtk_theme: Some("catppuccin-mocha-sky-standard".to_string())
+        gtk_theme: Some("catppuccin-mocha-sky-standard".to_string()),
     }
 }

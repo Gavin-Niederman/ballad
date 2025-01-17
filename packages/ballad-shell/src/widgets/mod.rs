@@ -5,8 +5,8 @@ pub mod clock;
 pub mod icon;
 pub mod quick_settings;
 pub mod sidebar;
-pub mod window;
 pub mod volume;
+pub mod window;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Orientation {

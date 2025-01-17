@@ -1,8 +1,8 @@
 use gtk::{Align, Label, Widget, prelude::*};
 use typed_builder::TypedBuilder;
 
-pub mod user;
 pub mod shell;
+pub mod user;
 
 pub fn settings_stack() -> gtk::Stack {
     let stack = gtk::Stack::builder().name("settings-stack").build();
@@ -28,7 +28,13 @@ fn option<O: IsA<Widget>>(name: &str, description: Option<&str>, option: &O) -> 
         .halign(Align::Start)
         .build();
 
-    text_container.append(&Label::builder().label(name).css_classes(["option-name"]).halign(Align::Start).build());
+    text_container.append(
+        &Label::builder()
+            .label(name)
+            .css_classes(["option-name"])
+            .halign(Align::Start)
+            .build(),
+    );
     if let Some(description) = description {
         text_container.append(
             &Label::builder()

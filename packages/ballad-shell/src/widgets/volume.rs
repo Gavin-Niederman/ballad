@@ -2,7 +2,9 @@ use std::cell::LazyCell;
 
 use ballad_services::audio::{AUDIO_SERVICE, AudioService};
 use gtk::{
-    glib::{self, clone, closure_local}, prelude::*, Align, Button, Stack, StackTransitionType
+    Align, Button, Stack, StackTransitionType,
+    glib::{self, clone, closure_local},
+    prelude::*,
 };
 use typed_builder::TypedBuilder;
 
@@ -22,7 +24,12 @@ impl From<Volume> for gtk::Box {
     }
 }
 
-pub fn volume(Volume { orientation, draw_value }: Volume) -> gtk::Box {
+pub fn volume(
+    Volume {
+        orientation,
+        draw_value,
+    }: Volume,
+) -> gtk::Box {
     let volume_container = gtk::Box::builder()
         .orientation(orientation.into())
         .name("volume-container")

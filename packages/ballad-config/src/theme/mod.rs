@@ -245,6 +245,12 @@ pub fn get_or_init_all_theme_selections() -> Vec<ThemeSelection> {
         ThemeSelection::CatppuccinMocha,
         ThemeSelection::CatppuccinLatte,
     ];
-    themes.extend(config.theme.custom_themes.into_iter().map(|theme| ThemeSelection::Custom(theme.name)));
+    themes.extend(
+        config
+            .theme
+            .custom_themes
+            .into_iter()
+            .map(|theme| ThemeSelection::Custom(theme.name)),
+    );
     themes
 }

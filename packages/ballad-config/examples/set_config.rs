@@ -1,6 +1,4 @@
-use std::{thread::sleep, time::Duration};
-
-use ballad_config::{theme::{Theme, ThemeColors}, ServiceConfig, ShellConfig, ThemeConfig};
+use ballad_config::theme::{Theme, ThemeColors};
 
 fn main() {
     let theme = Theme {

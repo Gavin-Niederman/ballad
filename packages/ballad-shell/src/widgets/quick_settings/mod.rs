@@ -1,8 +1,8 @@
+mod brightness;
 mod config;
 mod dropdown_button;
 mod flavor;
 mod info;
-mod brightness;
 
 use super::volume::Volume;
 use super::window::{Layer, LayershellWindow};

@@ -1,4 +1,4 @@
-use std::{cell::LazyCell, collections::HashMap};
+use std::cell::LazyCell;
 
 use super::{Page, option};
 use ballad_config::{ShellConfig, ThemeConfig, theme::get_or_init_all_theme_selections};

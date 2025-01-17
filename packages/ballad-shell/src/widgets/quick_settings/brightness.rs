@@ -1,8 +1,8 @@
 use std::cell::LazyCell;
 
 use ballad_services::brightness::BRIGHTNESS_SERVICE;
-use gtk::{glib::clone, prelude::*, Scale};
 use gtk::glib;
+use gtk::{Scale, glib::clone, prelude::*};
 
 use crate::widgets::icon::symbolic_icon;
 

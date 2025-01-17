@@ -10,7 +10,10 @@ use gtk::{
     prelude::ObjectExt,
 };
 
-pub fn on_theme_button_press(retained_light_flavor: Variable, retained_dark_flavor: Variable) -> impl Fn(bool) + 'static {
+pub fn on_theme_button_press(
+    retained_light_flavor: Variable,
+    retained_dark_flavor: Variable,
+) -> impl Fn(bool) + 'static {
     CONFIG_SERVICE.with(|config_service| {
         let config_service = LazyCell::force(config_service).clone();
 
