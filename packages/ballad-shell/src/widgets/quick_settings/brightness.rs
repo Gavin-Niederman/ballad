@@ -29,13 +29,13 @@ pub fn brightness() -> gtk::Box {
     BRIGHTNESS_SERVICE.with(|service| {
         let service = LazyCell::force(service).clone();
 
-        brightness_bar.set_value(service.brightness());
+        brightness_bar.set_value(service.brightness_blocking());
 
-        service.connect_brightness_notify(clone!(
+        service.connect_brightness(clone!(
             #[weak]
             brightness_bar,
-            move |brightness| {
-                brightness_bar.set_value(brightness.brightness());
+            move |_, real_brightness| {
+                brightness_bar.set_value(real_brightness);
             }
         ));
         brightness_bar.connect_value_changed(move |bar| {

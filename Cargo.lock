@@ -313,6 +313,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ballad-macro"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "ballad-search"
 version = "0.1.0"
 dependencies = [
@@ -332,6 +340,7 @@ version = "0.1.0"
 dependencies = [
  "alsa",
  "ballad-config",
+ "ballad-macro",
  "futures",
  "gtk4",
  "libc",
@@ -2123,9 +2132,9 @@ checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
 name = "syn"
-version = "2.0.92"
+version = "2.0.96"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70ae51629bf965c5c098cc9e87908a3df5301051a9e087d6f9bef5c9771ed126"
+checksum = "d5d0adab1ae378d7f53bdebc67a39f1f151407ef230f0ce2883572f5d8985c80"
 dependencies = [
  "proc-macro2",
  "quote",

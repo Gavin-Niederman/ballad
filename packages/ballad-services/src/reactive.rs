@@ -82,6 +82,12 @@ impl<T: Clone> Reactive<T> {
         smol::block_on(self.get())
     }
 
+    pub fn apply(&self, f: impl FnOnce(&mut T)) {
+        let mut value = self.get_blocking();
+        f(&mut value);
+        self.set_blocking(value);
+    }
+
     pub async fn subscribe(&self) -> Receiver<T> {
         let (sender, receiver) = smol::channel::unbounded();
         self.inner.write().await.subscribe(sender);
@@ -89,17 +95,15 @@ impl<T: Clone> Reactive<T> {
         receiver
     }
 
-    pub fn connect(&self, connection: impl Fn(Self, T) -> ListenerControl + 'static)
+    pub fn connect(&self, connection: impl Fn(Self, T) + 'static)
     where
         T: 'static,
     {
         let this = self.clone();
         gtk::glib::spawn_future_local(async move {
             let receiver = this.subscribe().await;
-            while let Ok(value) = receiver.recv().await {
-                if connection(this.clone(), value) == ListenerControl::Remove {
-                    break;
-                }
+            while receiver.recv().await.is_ok() {
+                connection(this.clone(), this.get_blocking())
             }
         });
     }
@@ -113,4 +117,40 @@ impl<T: Clone> Downgrade for Reactive<T> {
             inner: self.inner.downgrade(),
         }
     }
+}
+
+#[macro_export]
+macro_rules! reactive_wrapper {
+    ($vis:vis $wrapper:ident<$inner:path$(, Weak = $weak_ty:ident)?>) => {
+        #[derive(Clone, Debug)]
+        $vis struct $wrapper {
+            inner: $crate::reactive::Reactive<$inner>,
+        }
+
+        $(
+            #[derive(Clone, Debug)]
+            $vis struct $weak_ty {
+                inner: $crate::reactive::WeakReactive<$inner>,
+            }
+
+            impl gtk::glib::clone::Downgrade for $wrapper {
+                type Weak = $weak_ty;
+
+                fn downgrade(&self) -> Self::Weak {
+                    $weak_ty {
+                        inner: self.inner.downgrade()
+                    }
+                }
+            }
+            impl gtk::glib::clone::Upgrade for $weak_ty {
+                type Strong = $wrapper;
+
+                fn upgrade(&self) -> Option<Self::Strong> {
+                    Some($wrapper {
+                        inner: self.inner.upgrade()?
+                    })
+                }
+            }
+        )?
+    };
 }

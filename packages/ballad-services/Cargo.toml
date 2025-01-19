@@ -4,12 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-gtk = { workspace = true }
 ballad-config = { workspace = true, features = ["gtk"]}
+ballad-macro = { workspace = true }
+
+gtk = { workspace = true }
 alsa = { git = "https://github.com/diwic/alsa-rs", version = "0.9.1" }
+libc = "0.2.169"
+
 smol = { workspace = true }
 zbus = { workspace = true }
 futures = { version = "0.3.31", default-features = false, features = ["std", "async-await"] }
-niri-ipc = "25.1.0"
+
 serde_json = "1.0.135"
-libc = "0.2.169"
+niri-ipc = "25.1.0"

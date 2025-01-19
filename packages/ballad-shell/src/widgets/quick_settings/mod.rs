@@ -5,6 +5,7 @@ mod info;
 
 use super::volume::Volume;
 use super::window::{Layer, LayershellWindow};
+use ballad_services::brightness::BRIGHTNESS_SERVICE;
 use flavor::flavor_selector;
 use gtk::gdk::Key;
 use gtk::glib;
@@ -87,7 +88,9 @@ pub fn quick_settings(QuickSettings { application }: QuickSettings) -> Applicati
             .draw_value(false)
             .build(),
     );
-    quick_settings.append(&brightness::brightness());
+    if BRIGHTNESS_SERVICE.with(|service| service.available_blocking()) {
+        quick_settings.append(&brightness::brightness());
+    }
     quick_settings.append(&flavor_selector());
 
     overlay.set_child(Some(&click_screen));
