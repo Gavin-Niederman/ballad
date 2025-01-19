@@ -129,9 +129,9 @@ fn start_pulse_daemon() -> (Sender<AudioChange>, Receiver<AudioChange>) {
 #[derive(Debug, Clone, Reactive)]
 #[wrapper_type(AudioService)]
 struct AudioServiceInner {
-    #[get]
+    #[property(get)]
     volume: f64,
-    #[get]
+    #[property(get)]
     muted: bool,
 
     command_sender: Sender<AudioChange>,

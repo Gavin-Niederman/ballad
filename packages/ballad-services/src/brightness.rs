@@ -12,9 +12,9 @@ use crate::{reactive::Reactive, reactive_wrapper};
 #[derive(Debug, Clone, Reactive, Default)]
 #[wrapper_type(BrightnessService)]
 struct BrightnessServiceInner {
-    #[get]
+    #[property(get)]
     brightness: f64,
-    #[get]
+    #[property(get)]
     available: bool,
 
     device: Option<String>,

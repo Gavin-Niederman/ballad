@@ -7,6 +7,7 @@ pub mod config;
 pub mod niri;
 pub mod reactive;
 pub mod upower;
+pub mod power_profiles;
 
 pub(crate) static DBUS_SYSTEM_CONNECTION: LazyLock<zbus::Connection> =
     LazyLock::new(|| smol::block_on(zbus::Connection::system()).unwrap());

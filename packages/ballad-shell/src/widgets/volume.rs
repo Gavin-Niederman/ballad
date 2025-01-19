@@ -3,7 +3,7 @@ use std::cell::LazyCell;
 use ballad_services::audio::AUDIO_SERVICE;
 use gtk::{
     Align, Button, Stack, StackTransitionType,
-    glib::{self, Propagation, clone},
+    glib::{self, clone},
     prelude::*,
 };
 use typed_builder::TypedBuilder;
