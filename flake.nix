@@ -57,7 +57,7 @@
             librsvg
             cairo
 
-            alsa-lib
+            libpulseaudio
 
             libxkbcommon
           ];
@@ -69,7 +69,7 @@
               librsvg
               cairo
 
-              alsa-lib
+              libpulseaudio
 
               libxkbcommon
             ];
@@ -90,7 +90,7 @@
               librsvg
               cairo
 
-              alsa-lib
+              libpulseaudio
 
               libxkbcommon
 

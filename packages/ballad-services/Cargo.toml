@@ -8,11 +8,12 @@ ballad-config = { workspace = true, features = ["gtk"]}
 ballad-macro = { workspace = true }
 
 gtk = { workspace = true }
-alsa = { git = "https://github.com/diwic/alsa-rs", version = "0.9.1" }
+pulsectl-rs = "0.3.2"
+libpulse-binding = "2.28.2"
 libc = "0.2.169"
+zbus = { workspace = true }
 
 smol = { workspace = true }
-zbus = { workspace = true }
 futures = { version = "0.3.31", default-features = false, features = ["std", "async-await"] }
 
 serde_json = "1.0.135"

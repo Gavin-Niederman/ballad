@@ -104,6 +104,15 @@ pub fn derive_reactive(input: TokenStream) -> TokenStream {
 
     quote! {
         #(#prop_impls)*
+
+        impl #wrapper_type {
+            pub fn connect(&self, connection: impl Fn(Self) + 'static) {
+                let this = self.clone();
+                self.inner.connect(move |_, value| {
+                    connection(this.clone())
+                })
+            }
+        }
     }
     .into()
 }

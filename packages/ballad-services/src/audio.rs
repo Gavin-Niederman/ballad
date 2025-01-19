@@ -1,258 +1,204 @@
-use std::cell::LazyCell;
+use std::{cell::LazyCell, time::Duration};
 
-use gtk::glib;
+use ballad_macro::Reactive;
+use futures::{FutureExt, select_biased};
+use libpulse_binding::{
+    context::subscribe::{Facility, InterestMaskSet, Operation},
+    mainloop::standard::IterateResult,
+    volume::Volume,
+};
+use pulsectl::{
+    Handler,
+    controllers::{DeviceControl, SinkController},
+};
+use smol::{
+    Timer,
+    channel::{Receiver, Sender},
+};
 
-mod audio_imp {
-    use alsa::mixer::{Mixer, Selem, SelemChannelId, SelemId};
+use crate::{reactive::Reactive, reactive_wrapper};
 
-    pub struct SystemSound {
-        mixer: Mixer,
-        master_audio: SelemId,
-    }
-    impl SystemSound {
-        pub fn new() -> Option<Self> {
-            let Ok(mixer) = Mixer::new("default", false) else {
-                println!(
-                    "Failed to open default mixer. Ballad Audio services do not work in containers!"
-                );
-                return None;
-            };
-            let master_audio = SelemId::new("Master", 0);
-
-            Some(Self {
-                mixer,
-                master_audio,
-            })
-        }
-
-        fn get_master_selem(&self) -> Selem<'_> {
-            self.mixer.find_selem(&self.master_audio).unwrap()
-        }
-
-        pub fn get_volume(&self) -> f64 {
-            let selem = self.get_master_selem();
-
-            let (min, max) = selem.get_playback_volume_range();
-            let volume = selem.get_playback_volume(SelemChannelId::mono()).unwrap();
-
-            (volume - min) as f64 / (max - min) as f64
-        }
-        pub fn set_volume(&self, volume: f64) {
-            let selem = self.get_master_selem();
-
-            let (min, max) = selem.get_playback_volume_range();
-            let volume = (volume * (max - min) as f64 + min as f64) as i64;
-
-            selem.set_playback_volume_all(volume).unwrap();
-        }
-
-        pub fn get_muted(&self) -> bool {
-            self.get_master_selem()
-                .get_playback_switch(SelemChannelId::mono())
-                .unwrap()
-                == 0
-        }
-        pub fn set_muted(&self, muted: bool) {
-            self.get_master_selem()
-                .set_playback_switch_all((!muted).into())
-                .unwrap();
-        }
-
-        pub fn tick(&mut self) {
-            _ = self.mixer.handle_events();
-        }
-    }
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum AudioChange {
+    Volume(f64),
+    Muted(bool),
+    All(f64, bool),
 }
 
-mod gobject_imp {
-    use std::cell::{Cell, RefCell};
-    use std::sync::{Arc, Mutex, OnceLock};
-    use std::thread::sleep;
-    use std::time::Duration;
+fn get_volume(controller: &mut SinkController) -> (f64, bool) {
+    let default_dev = controller.get_default_device().unwrap();
+    let full_vol = default_dev.base_volume.0;
+    let vol = default_dev.volume.get()[0];
+    (vol.0 as f64 / full_vol as f64, default_dev.mute)
+}
 
-    use ballad_config::{ServiceConfig, get_or_init_service_config};
-    use gtk::gio;
-    use gtk::glib::subclass::Signal;
-    use gtk::glib::{self, clone, closure_local};
-    use gtk::{prelude::*, subclass::prelude::*};
-    use smol::channel::TryRecvError;
+fn start_pulse_daemon() -> (Sender<AudioChange>, Receiver<AudioChange>) {
+    let (command_sender, command_receiver) = smol::channel::unbounded();
+    let (event_sender, event_receiver) = smol::channel::bounded(5);
 
-    use crate::config::{CONFIG_SERVICE, ConfigService};
+    std::thread::spawn(move || {
+        let mut handler = Handler::connect("Ballad Shell").unwrap();
+        let subscribe_op = handler
+            .context
+            .borrow_mut()
+            .subscribe(InterestMaskSet::all(), |_| {});
+        handler.wait_for_operation(subscribe_op).unwrap();
 
-    use super::audio_imp;
+        let (notifier, receiver) = smol::channel::unbounded();
+        handler
+            .context
+            .borrow_mut()
+            .set_subscribe_callback(Some(Box::new(move |facility, operation, _index| {
+                if facility.is_some_and(|facility| {
+                    facility == Facility::Card || facility == Facility::Sink || facility == Facility::SourceOutput
+                }) && operation.is_some_and(|op| op == Operation::Changed)
+                {
+                    _ = notifier.send_blocking(());
+                }
+            })));
 
-    enum AudioChange {
-        Volume(f64),
-        Muted(bool),
-        All(f64, bool),
-    }
+        let mut sink_controller = SinkController { handler };
 
-    #[derive(Default, glib::Properties)]
-    #[properties(wrapper_type = super::AudioService)]
-    pub struct AudioService {
-        #[property(get, set = AudioService::set_volume)]
-        volume: Cell<f64>,
-        #[property(get, set = AudioService::set_muted)]
-        muted: Cell<bool>,
+        smol::block_on(async {
+            let mut last_volume = None;
+            let mut last_muted = None;
 
-        command_sender: RefCell<Option<smol::channel::Sender<AudioChange>>>,
-    }
+            let (vol, muted) = get_volume(&mut sink_controller);
+            _ = event_sender.send(AudioChange::All(vol, muted)).await;
 
-    impl AudioService {
-        fn set_volume(&self, volume: f64) {
-            _ = self
-                .command_sender
-                .borrow()
-                .as_ref()
-                .unwrap()
-                .try_send(AudioChange::Volume(volume));
-            self.volume.set(volume);
-        }
-        fn set_muted(&self, muted: bool) {
-            _ = self
-                .command_sender
-                .borrow()
-                .as_ref()
-                .unwrap()
-                .try_send(AudioChange::Muted(muted));
-            self.muted.set(muted);
-        }
-    }
-
-    #[glib::object_subclass]
-    impl ObjectSubclass for AudioService {
-        const NAME: &'static str = "BalladServicesAudioService";
-        type Type = super::AudioService;
-    }
-
-    #[glib::derived_properties]
-    impl ObjectImpl for AudioService {
-        fn constructed(&self) {
-            self.parent_constructed();
-
-            let (command_sender, command_receiver) = smol::channel::bounded(5);
-            let (update_sender, update_receiver) = smol::channel::bounded(1);
-
-            let update_interval = Arc::new(Mutex::new(
-                get_or_init_service_config().unwrap_or_default().poll_interval_millis,
-            ));
-
-            CONFIG_SERVICE.with(|config| {
-                config.connect_closure(
-                    "service-config-changed",
-                    false,
-                    closure_local!(
-                        #[weak]
-                        update_interval,
-                        move |_: ConfigService, config: ServiceConfig| {
-                            *update_interval.lock().unwrap() = config.poll_interval_millis;
-                        }
-                    ),
-                );
-            });
-
-            // Notification thread
-            glib::spawn_future_local(clone!(
-                #[weak(rename_to = this)]
-                self,
-                async move {
-                    while let Ok(received) = update_receiver.recv().await {
-                        match received {
-                            AudioChange::Volume(volume) => {
-                                this.volume.set(volume);
-                                this.obj().notify_volume();
-                            }
-                            AudioChange::Muted(muted) => {
-                                this.muted.set(muted);
-                                this.obj().notify_muted();
-                            }
-                            AudioChange::All(volume, muted) => {
-                                this.volume.set(volume);
-                                this.muted.set(muted);
-                                this.obj().notify_volume();
-                                this.obj().notify_muted();
-                            }
-                        }
-                        this.obj().emit_by_name::<()>("audio-changed", &[]);
+            loop {
+                match sink_controller.handler.mainloop.borrow_mut().iterate(false) {
+                    IterateResult::Success(_) => {}
+                    IterateResult::Quit(_) | IterateResult::Err(_) => {
+                        break;
                     }
                 }
-            ));
 
-            // Alsa daemon thread
-            gio::spawn_blocking(move || {
-                let mut system_sound = audio_imp::SystemSound::new().unwrap();
-
-                let mut last_volume = system_sound.get_volume();
-                let mut last_muted = system_sound.get_muted();
-
-                let mut sleep_duration =
-                    Duration::from_millis(*update_interval.lock().unwrap() as u64);
-
-                update_sender
-                    .try_send(AudioChange::All(last_volume, last_muted))
-                    .unwrap();
-
-                loop {
-                    match command_receiver.try_recv() {
-                        Err(TryRecvError::Closed) => break,
-                        Ok(AudioChange::Muted(muted)) => {
-                            last_muted = muted;
-                            system_sound.set_muted(muted);
+                select_biased! {
+                    res = receiver.recv().fuse() => {
+                        if res.is_err() {
+                            break;
                         }
-                        Ok(AudioChange::Volume(volume)) => {
-                            last_volume = volume;
-                            system_sound.set_volume(volume);
+
+                        let (vol, muted) = get_volume(&mut sink_controller);
+
+                        if last_volume != Some(vol) {
+                            last_volume = Some(vol);
+                            _ = event_sender.send(AudioChange::Volume(vol)).await;
                         }
-                        Ok(AudioChange::All(volume, muted)) => {
-                            last_volume = volume;
-                            last_muted = muted;
-                            system_sound.set_volume(volume);
-                            system_sound.set_muted(muted);
+                        if last_muted != Some(muted) {
+                            last_muted = Some(muted);
+                            _ = event_sender.send(AudioChange::Muted(muted)).await;
                         }
-                        _ => {}
                     }
+                    res = command_receiver.recv().fuse() => {
+                        if let Ok(change) = res {
+                            let mut default_dev = sink_controller.get_default_device().unwrap();
 
-                    let volume = system_sound.get_volume();
-                    let muted = system_sound.get_muted();
+                            match change {
+                                AudioChange::Volume(volume) => {
+                                    let num_channels = default_dev.channel_map.len();
+                                    let full_vol = default_dev.base_volume.0;
+                                    let v = (volume * full_vol as f64) as u32;
+                                    sink_controller.set_device_volume_by_index(default_dev.index, default_dev.volume.set(num_channels, Volume(v)));
 
-                    if volume != last_volume {
-                        _ = update_sender.try_send(AudioChange::Volume(volume));
-                        last_volume = volume;
+                                    last_volume = Some(volume);
+                                }
+                                AudioChange::Muted(muted) => {
+                                    sink_controller.set_device_mute_by_index(default_dev.index, muted);
+
+                                    last_muted = Some(muted);
+                                }
+                                _ => unreachable!(),
+                            }
+                        } else {
+                            break;
+                        }
                     }
-                    if muted != last_muted {
-                        _ = update_sender.try_send(AudioChange::Muted(muted));
-                        last_muted = muted;
-                    }
-
-                    system_sound.tick();
-
-                    // Prevent lock contention
-                    if let Ok(duration) = update_interval.try_lock() {
-                        sleep_duration = Duration::from_millis(*duration as u64);
-                    }
-
-                    sleep(sleep_duration);
+                    _ = Timer::after(Duration::from_millis(10)).fuse() => {}
                 }
-            });
+            }
+        })
+    });
 
-            self.command_sender.replace(Some(command_sender));
-        }
-
-        fn signals() -> &'static [Signal] {
-            static SIGNALS: OnceLock<Vec<Signal>> = OnceLock::new();
-            SIGNALS.get_or_init(|| vec![Signal::builder("audio-changed").build()])
-        }
-    }
+    (command_sender, event_receiver)
 }
 
-glib::wrapper! {
-    pub struct AudioService(ObjectSubclass<gobject_imp::AudioService>);
+#[derive(Debug, Clone, Reactive)]
+#[wrapper_type(AudioService)]
+struct AudioServiceInner {
+    #[get]
+    volume: f64,
+    #[get]
+    muted: bool,
+
+    command_sender: Sender<AudioChange>,
 }
+
+reactive_wrapper!(pub AudioService<AudioServiceInner, Weak = WeakAudioServiceInner>);
+
 impl AudioService {
     pub fn new() -> Self {
-        glib::Object::builder().build()
+        let (command_sender, event_receiver) = start_pulse_daemon();
+
+        let this = Self {
+            inner: Reactive::new(AudioServiceInner {
+                volume: 0.0,
+                muted: false,
+                command_sender,
+            }),
+        };
+
+        if let Ok(AudioChange::All(vol, muted)) = event_receiver.recv_blocking() {
+            this.inner.apply(|inner| {
+                inner.volume = vol;
+                inner.muted = muted;
+            });
+        }
+
+        let this2 = this.clone();
+        gtk::glib::spawn_future_local(async move {
+            while let Ok(received) = event_receiver.recv().await {
+                match received {
+                    AudioChange::Volume(volume) => this2.inner.apply(|inner| inner.volume = volume),
+                    AudioChange::Muted(muted) => this2.inner.apply(|inner| inner.muted = muted),
+                    AudioChange::All(volume, muted) => {
+                        dbg!(volume, muted);
+                        this2.inner.apply(|inner| {
+                            inner.volume = volume;
+                            inner.muted = muted;
+                        });
+                    }
+                }
+            }
+        });
+
+        this
+    }
+
+    pub async fn set_volume(&self, volume: f64) {
+        let inner = self.inner.get().await;
+        _ = inner.command_sender.send(AudioChange::Volume(volume)).await;
+        self.inner.apply(|inner| inner.volume = volume);
+    }
+    pub fn set_volume_blocking(&self, volume: f64) {
+        smol::block_on(self.set_volume(volume));
+    }
+    pub async fn set_muted(&self, muted: bool) {
+        _ = self
+            .inner
+            .get()
+            .await
+            .command_sender
+            .send(AudioChange::Muted(muted))
+            .await;
+        self.inner.apply(|inner| inner.muted = muted);
+    }
+    pub fn set_muted_blocking(&self, muted: bool) {
+        smol::block_on(self.set_muted(muted));
     }
 }
+
 impl Default for AudioService {
     fn default() -> Self {
         Self::new()

@@ -1,10 +1,8 @@
 use std::cell::LazyCell;
 
-use ballad_services::audio::{AUDIO_SERVICE, AudioService};
+use ballad_services::audio::AUDIO_SERVICE;
 use gtk::{
-    Align, Button, Stack, StackTransitionType,
-    glib::{self, clone, closure_local},
-    prelude::*,
+    glib::{self, clone, Propagation}, prelude::*, Align, Button, Stack, StackTransitionType
 };
 use typed_builder::TypedBuilder;
 
@@ -80,57 +78,52 @@ pub fn volume(
         volume_bar.set_inverted(true);
     }
 
-    AUDIO_SERVICE.with(clone!(
-        #[weak]
-        percent_display,
-        #[weak]
-        volume_bar,
-        #[weak]
-        mute_toggle,
-        move |service| {
-            let service = LazyCell::force(service).clone();
+    let service = AUDIO_SERVICE.with(|service| LazyCell::force(service).clone());
 
-            service
-                .bind_property("volume", &percent_display, "label")
-                .transform_to(|_, value: f64| Some(format!("{:.0}%", value * 100.0)))
-                .build();
-            service
-                .bind_property("muted", &icon_stack, "visible-child-name")
-                .transform_to(|_, value: bool| Some(if value { "muted" } else { "unmuted" }))
-                .build();
+    smol::block_on(async {
+        dbg!();
+        service.connect_muted(clone!(
+            #[weak]
+            icon_stack,
+            #[weak]
+            volume_bar,
+            move |_, muted| {
+                set_class_on_widget(muted, &volume_bar, "muted");
+                icon_stack.set_visible_child_name(if muted { "muted" } else { "unmuted" });
+            }
+        ));
+        service.connect_volume(clone!(
+            #[weak]
+            percent_display,
+            #[weak]
+            volume_bar,
+            move |service, _| {
+                let volume = service.volume_blocking();
+                percent_display.set_label(&format!("{:.0}%", volume * 100.0));
+                volume_bar.set_value(volume);
+            }
+        ));
 
-            service.connect_closure(
-                "audio-changed",
-                false,
-                closure_local!(
-                    #[weak]
-                    volume_bar,
-                    move |service: AudioService| {
-                        volume_bar.set_value(service.volume());
-                        set_class_on_widget(service.muted(), &volume_bar, "muted");
-                    }
-                ),
-            );
+        // User input
+        volume_bar.connect_value_changed(clone!(
+            #[weak]
+            service,
+            move |bar| {
+                service.set_volume_blocking(bar.value());
+            }
+        ));
+        mute_toggle.connect_clicked(clone!(
+            #[weak]
+            service,
+            move |_| {
+                let muted = service.muted_blocking();
+                service.set_muted_blocking(!muted);
+            }
+        ));
 
-            // User input
-            volume_bar.connect_value_changed(clone!(
-                #[weak]
-                service,
-                move |bar| service.set_volume(bar.value())
-            ));
-            mute_toggle.connect_clicked(clone!(
-                #[weak]
-                service,
-                move |_| {
-                    service.set_muted(!service.muted());
-                    service.emit_by_name::<()>("audio-changed", &[]);
-                }
-            ));
-
-            percent_display.set_label(&format!("{:.0}%", service.volume() * 100.0));
-            volume_bar.set_value(service.volume());
-        }
-    ));
+        percent_display.set_label(&format!("{:.0}%", service.volume().await * 100.0));
+        volume_bar.set_value(service.volume().await);
+    });
 
     volume_container.append(&mute_toggle);
     if draw_value {
