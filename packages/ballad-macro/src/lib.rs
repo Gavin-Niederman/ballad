@@ -25,15 +25,9 @@ pub fn derive_reactive(input: TokenStream) -> TokenStream {
 
     let prop_impls = data.fields.iter().filter_map(|field| {
         let field_ident = field.ident.as_ref()?;
-        
-        let set = field
-            .attrs
-            .iter()
-            .any(|attr| attr.path().is_ident("set"));
-        let get = field
-            .attrs
-            .iter()
-            .any(|attr| attr.path().is_ident("get"));
+
+        let set = field.attrs.iter().any(|attr| attr.path().is_ident("set"));
+        let get = field.attrs.iter().any(|attr| attr.path().is_ident("get"));
 
         if !set && !get {
             return None;
@@ -81,25 +75,23 @@ pub fn derive_reactive(input: TokenStream) -> TokenStream {
         };
 
         let connect_ident = format_ident!("connect_{field_ident}");
-        Some(
-            quote! {
-                impl #wrapper_type {
-                    #get
-                    #set
+        Some(quote! {
+            impl #wrapper_type {
+                #get
+                #set
 
-                    pub fn #connect_ident(&self, connection: impl Fn(Self, #ty) + 'static) {
-                        let this = self.clone();
-                        let cached = std::cell::RefCell::new(self.inner.get_blocking().#field_ident);
-                        self.inner.connect(move |_, value| {
-                            if value.#field_ident != *cached.borrow() {
-                                *cached.borrow_mut() = value.#field_ident;
-                                connection(this.clone(), value.#field_ident)
-                            }
-                        })
-                    }
+                pub fn #connect_ident(&self, connection: impl Fn(Self, #ty) + 'static) {
+                    let this = self.clone();
+                    let cached = std::cell::RefCell::new(self.inner.get_blocking().#field_ident);
+                    self.inner.connect(move |_, value| {
+                        if value.#field_ident != *cached.borrow() {
+                            *cached.borrow_mut() = value.#field_ident;
+                            connection(this.clone(), value.#field_ident)
+                        }
+                    })
                 }
             }
-        )
+        })
     });
 
     quote! {

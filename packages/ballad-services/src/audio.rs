@@ -50,7 +50,9 @@ fn start_pulse_daemon() -> (Sender<AudioChange>, Receiver<AudioChange>) {
             .borrow_mut()
             .set_subscribe_callback(Some(Box::new(move |facility, operation, _index| {
                 if facility.is_some_and(|facility| {
-                    facility == Facility::Card || facility == Facility::Sink || facility == Facility::SourceOutput
+                    facility == Facility::Card
+                        || facility == Facility::Sink
+                        || facility == Facility::SourceOutput
                 }) && operation.is_some_and(|op| op == Operation::Changed)
                 {
                     _ = notifier.send_blocking(());
