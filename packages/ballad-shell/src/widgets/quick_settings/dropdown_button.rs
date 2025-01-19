@@ -1,4 +1,4 @@
-use ballad_services::variable::Variable;
+use ballad_services::reactive::Reactive;
 use gtk::{
     Box, Button, Image, Orientation, Revealer, Widget,
     glib::{self, clone},
@@ -13,7 +13,7 @@ use crate::utils::set_class_on_widget;
 pub struct DropdownButton<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static> {
     pub button_content: B,
     pub dropdown_content: R,
-    pub toggled: Variable,
+    pub toggled: Reactive<bool>,
     #[builder(setter(strip_option), default)]
     pub on_toggle: Option<O>,
 }
@@ -21,11 +21,11 @@ impl<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static> From<DropdownButton<
     for gtk::Box
 {
     fn from(props: DropdownButton<B, R, O>) -> Self {
-        dropdown_button(props)
+        smol::block_on(dropdown_button(props))
     }
 }
 
-pub fn dropdown_button<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static>(
+pub async fn dropdown_button<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static>(
     DropdownButton {
         button_content,
         dropdown_content,
@@ -39,15 +39,16 @@ pub fn dropdown_button<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static>(
         .css_classes(["dropdown-button"])
         .build();
 
-    toggled.connect_value_changed_typed(
-        false,
-        clone!(
-            #[weak]
-            container,
-            move |_, toggled: bool| set_class_on_widget(toggled, &container, "toggled")
-        ),
-    );
-    if toggled.value_typed().unwrap_or(false) {
+    toggled.connect(clone!(
+        #[weak]
+        container,
+        #[upgrade_or_default]
+        move |_, toggled: bool| {
+            set_class_on_widget(toggled, &container, "toggled");
+            Default::default()
+        }
+    ));
+    if toggled.get().await {
         container.add_css_class("toggled");
     }
 
@@ -97,10 +98,12 @@ pub fn dropdown_button<B: IsA<Widget>, R: IsA<Widget>, O: Fn(bool) + 'static>(
         #[weak]
         toggled,
         move |_| {
-            toggled.set_value_typed(!toggled.value_typed::<bool>().unwrap());
-            if let Some(on_toggle) = on_toggle.as_ref() {
-                on_toggle(toggled.value_typed().unwrap_or(false));
-            }
+            smol::block_on(async {
+                toggled.set(!toggled.get().await).await;
+                if let Some(on_toggle) = on_toggle.as_ref() {
+                    on_toggle(toggled.get().await);
+                }
+            })
         }
     ));
 

@@ -134,7 +134,7 @@ mod gobject_imp {
             let (update_sender, update_receiver) = smol::channel::bounded(1);
 
             let update_interval = Arc::new(Mutex::new(
-                get_or_init_service_config().poll_interval_millis,
+                get_or_init_service_config().unwrap_or_default().poll_interval_millis,
             ));
 
             CONFIG_SERVICE.with(|config| {

@@ -35,7 +35,7 @@ scale {
 }
 
 levelbar,
-scale {
+scale, range {
     border-radius: $ui-radius;
     * {
         transition: $transition;
@@ -82,3 +82,4 @@ menu {
 * {
     all: unset;
 }
+

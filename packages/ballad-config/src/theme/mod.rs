@@ -147,7 +147,7 @@ impl ThemeSelection {
         match self {
             Self::Custom(theme_name) => {
                 let config = get_or_init_shell_config();
-                let custom_themes = config.theme.custom_themes;
+                let custom_themes = config.ok()?.theme.custom_themes;
 
                 custom_themes
                     .into_iter()
@@ -237,8 +237,8 @@ $transition: all $transition-length;",
     }
 }
 
-pub fn get_or_init_all_theme_selections() -> Vec<ThemeSelection> {
-    let config = get_or_init_shell_config();
+pub fn get_or_init_all_theme_selections() -> Result<Vec<ThemeSelection>, crate::Error> {
+    let config = get_or_init_shell_config()?;
     let mut themes = vec![
         ThemeSelection::CatppuccinFrappe,
         ThemeSelection::CatppuccinMacchiato,
@@ -252,5 +252,5 @@ pub fn get_or_init_all_theme_selections() -> Vec<ThemeSelection> {
             .into_iter()
             .map(|theme| ThemeSelection::Custom(theme.name)),
     );
-    themes
+    Ok(themes)
 }

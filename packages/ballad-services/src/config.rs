@@ -24,16 +24,16 @@ mod imp {
         #[property(
             type = ShellConfig,
             name = "shell-config",
-            get = |_| ballad_config::get_or_init_shell_config(),
-            set = |_, val| ballad_config::set_shell_config(val)
+            get = |_| ballad_config::get_or_init_shell_config().unwrap_or_default(),
+            set = |_, val| _ = ballad_config::set_shell_config(val)
         )]
         _shell_config: (),
 
         #[property(
             type = ServiceConfig,
             name = "service-config",
-            get = |_| ballad_config::get_or_init_service_config(),
-            set = |_, val| ballad_config::set_service_config(val)
+            get = |_| ballad_config::get_or_init_service_config().unwrap_or_default(),
+            set = |_, val| _ = ballad_config::set_service_config(val)
         )]
         _service_config: (),
 

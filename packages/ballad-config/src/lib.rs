@@ -2,6 +2,7 @@ pub mod theme;
 
 #[cfg(feature = "gtk")]
 use gtk::glib;
+use snafu::Snafu;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
@@ -40,21 +41,23 @@ pub fn shell_config_path() -> PathBuf {
         .unwrap()
 }
 
-pub fn get_or_init_shell_config() -> ShellConfig {
+pub fn get_or_init_shell_config() -> Result<ShellConfig, Error> {
     let path = shell_config_path();
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    if path.exists() {
-        let content = std::fs::read_to_string(&path).unwrap();
-        toml::from_str(&content).unwrap()
+    std::fs::create_dir_all(path.parent().unwrap())?;
+    Ok(if path.exists() {
+        let content = std::fs::read_to_string(&path)?;
+        toml::from_str(&content)?
     } else {
         let config = ShellConfig::default();
-        std::fs::write(&path, toml::to_string(&config).unwrap()).unwrap();
+        std::fs::write(&path, toml::to_string(&config)?)?;
         config
-    }
+    })
 }
-pub fn set_shell_config(config: &ShellConfig) {
+pub fn set_shell_config(config: &ShellConfig) -> Result<(), Error> {
     let path = shell_config_path();
-    std::fs::write(&path, toml::to_string(config).unwrap()).unwrap();
+    std::fs::write(&path, toml::to_string(config)?)?;
+
+    Ok(())
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -78,20 +81,30 @@ pub fn service_config_path() -> PathBuf {
         .unwrap()
 }
 
-pub fn get_or_init_service_config() -> ServiceConfig {
+pub fn get_or_init_service_config() -> Result<ServiceConfig, Error> {
     let path = service_config_path();
-    std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-    if path.exists() {
-        let content = std::fs::read_to_string(&path).unwrap();
-        toml::from_str(&content).unwrap()
+    std::fs::create_dir_all(path.parent().unwrap())?;
+    Ok(if path.exists() {
+        let content = std::fs::read_to_string(&path)?;
+        toml::from_str(&content)?
     } else {
         let config = ServiceConfig::default();
-        std::fs::write(&path, toml::to_string(&config).unwrap()).unwrap();
+        std::fs::write(&path, toml::to_string(&config)?)?;
         config
-    }
+    })
 }
 
-pub fn set_service_config(config: &ServiceConfig) {
+pub fn set_service_config(config: &ServiceConfig) -> Result<(), Error> {
     let path = service_config_path();
-    std::fs::write(&path, toml::to_string(config).unwrap()).unwrap();
+    Ok(std::fs::write(&path, toml::to_string(config)?)?)
+}
+
+#[derive(Debug, Snafu)]
+pub enum Error {
+    #[snafu(transparent)]
+    Io { source: std::io::Error },
+    #[snafu(transparent)]
+    TomlDeserialize { source: toml::de::Error },
+    #[snafu(transparent)]
+    TomlSerialize { source: toml::ser::Error },
 }

@@ -6,7 +6,7 @@ use ballad_services::config::CONFIG_SERVICE;
 use gtk::DropDown;
 
 pub fn shell_page() -> gtk::Box {
-    let theme_options = get_or_init_all_theme_selections();
+    let theme_options = get_or_init_all_theme_selections().unwrap_or_default();
 
     let theme_option_strings = theme_options
         .iter()

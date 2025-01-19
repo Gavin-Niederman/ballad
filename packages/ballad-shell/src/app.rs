@@ -157,7 +157,7 @@ fn watch_theme_config() {
     // The CSS provider is replaced when the theme changes.
     let provider = Rc::new(RefCell::new(CssProvider::new()));
 
-    let config = ballad_config::get_or_init_shell_config();
+    let config = ballad_config::get_or_init_shell_config().unwrap_or_default();
     let initial_css = crate::style::compile_scss_for_config(&config.theme).unwrap();
     // Load the initial CSS.
     provider.borrow().load_from_string(&initial_css);
