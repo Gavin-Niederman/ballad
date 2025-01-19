@@ -81,7 +81,6 @@ pub fn volume(
     let service = AUDIO_SERVICE.with(|service| LazyCell::force(service).clone());
 
     smol::block_on(async {
-        dbg!();
         service.connect_muted(clone!(
             #[weak]
             icon_stack,
