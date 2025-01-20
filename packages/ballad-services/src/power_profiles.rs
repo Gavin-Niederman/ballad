@@ -1,5 +1,8 @@
+use std::cell::LazyCell;
+
 use ballad_macro::Reactive;
 use futures::join;
+use smol::stream::StreamExt;
 use zbus::proxy;
 
 use crate::{DBUS_SYSTEM_CONNECTION, reactive_wrapper};
@@ -67,6 +70,33 @@ pub struct PowerProfilesServiceInner {
     pub performance_degraded: bool,
     #[property(get)]
     pub performance_inhibited: bool,
+
+    proxy: Option<PowerProfilesProxy<'static>>,
+}
+
+impl PowerProfilesServiceInner {
+    pub async fn update(&mut self) {
+        if let Some(proxy) = self.proxy.as_ref() {
+            let (active_profile, profiles, performance_degraded, performance_inhibited) = join!(
+                proxy.active_profile(),
+                proxy.profiles(),
+                proxy.performance_degraded(),
+                proxy.performance_inhibited()
+            );
+
+            self.active_profile = active_profile.unwrap_or_default();
+            self.profiles = profiles
+                .unwrap_or_default()
+                .iter()
+                .map(|profile| {
+                    let string: String = profile["Profile"].clone().try_into().unwrap();
+                    string
+                })
+                .collect();
+            self.performance_degraded = performance_degraded.unwrap_or_default() == "true";
+            self.performance_inhibited = performance_inhibited.unwrap_or_default() == "true";
+        }
+    }
 }
 
 reactive_wrapper!(pub PowerProfilesService<PowerProfilesServiceInner, Weak = WeakPowerProfilesServiceInner>);
@@ -84,52 +114,42 @@ impl PowerProfilesService {
             return this;
         };
 
-        let (active_profile, profiles, performance_degraded, performance_inhibited) = join!(
-            proxy.active_profile(),
-            proxy.profiles(),
-            proxy.performance_degraded(),
-            proxy.performance_inhibited()
-        );
         this.inner.apply(|inner| {
-            inner.active_profile = active_profile.unwrap_or_default();
-            inner.profiles = profiles
-                .unwrap_or_default()
-                .iter()
-                .map(|profile| {
-                    let string: String = profile["Name"].clone().try_into().unwrap();
-                    string
-                })
-                .collect();
-            inner.performance_degraded = performance_degraded.unwrap_or_default() == "true";
-            inner.performance_inhibited = performance_inhibited.unwrap_or_default() == "true";
-        });
+            inner.proxy = Some(proxy);
+
+            smol::block_on(inner.update())
+        });     
 
         let this2 = this.clone();
         gtk::glib::spawn_future_local(async move {
-            let stream = proxy.receive_profiles_changed().await;
-            // while stream.next().await.is_some() {
-            //     let (active_profile, profiles, performance_degraded, performance_inhibited) = join!(
-            //         proxy.active_profile(),
-            //         proxy.profiles(),
-            //         proxy.performance_degraded(),
-            //         proxy.performance_inhibited()
-            //     );
-            //     this2.inner.apply(|inner| {
-            //         inner.active_profile = active_profile.unwrap_or_default();
-            //         inner.profiles = profiles
-            //             .unwrap_or_default()
-            //             .iter()
-            //             .map(|profile| {
-            //                 let string: String = profile["Name"].clone().try_into().unwrap();
-            //                 string
-            //             })
-            //             .collect();
-            //         inner.performance_degraded = performance_degraded.unwrap_or_default() == "true";
-            //         inner.performance_inhibited = performance_inhibited.unwrap_or_default() == "true";
-            //     });
-            // }
+            let proxy = zbus::fdo::PropertiesProxy::new(&DBUS_SYSTEM_CONNECTION, "org.freedesktop.UPower.PowerProfiles", "/org/freedesktop/UPower/PowerProfiles")
+                .await
+                .unwrap();
+            
+            let mut stream = proxy.receive_properties_changed().await.unwrap();
+            while stream.next().await.is_some() {
+                let mut inner = this2.inner.get().await;
+                inner.update().await;
+                this2.inner.set(inner).await;
+            }
         });
 
         this
     }
+
+    pub fn set_active_profile(&self, profile: String) {
+        self.inner.apply(|inner| {
+            inner.active_profile = profile;
+        });
+    }
+}
+
+impl Default for PowerProfilesService {
+    fn default() -> Self {
+        smol::block_on(Self::new())
+    }
+}
+
+thread_local! {
+    pub static POWER_PROFILES_SERVICE: LazyCell<PowerProfilesService> = LazyCell::new(PowerProfilesService::default)
 }

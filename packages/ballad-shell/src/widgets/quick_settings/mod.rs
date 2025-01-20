@@ -2,6 +2,7 @@ mod brightness;
 mod dropdown_button;
 mod flavor;
 mod info;
+mod power_profile;
 
 use super::volume::Volume;
 use super::window::{Layer, LayershellWindow};
@@ -15,6 +16,7 @@ use gtk::{
 };
 use gtk4_layer_shell::{KeyboardMode, LayerShell};
 use info::info_block;
+use power_profile::power_profile_selector;
 use typed_builder::TypedBuilder;
 
 pub const QUICK_SETTINGS_WINDOW_TITLE: &str = "quick-settings";
@@ -88,10 +90,14 @@ pub fn quick_settings(QuickSettings { application }: QuickSettings) -> Applicati
             .draw_value(false)
             .build(),
     );
+
     if BRIGHTNESS_SERVICE.with(|service| service.available_blocking()) {
         quick_settings.append(&brightness::brightness());
     }
-    quick_settings.append(&flavor_selector());
+    let dropdowns_top_row = Box::builder().orientation(Orientation::Horizontal).spacing(8).build();
+    dropdowns_top_row.append(&flavor_selector());
+    dropdowns_top_row.append(&power_profile_selector());
+    quick_settings.append(&dropdowns_top_row);
 
     overlay.set_child(Some(&click_screen));
     overlay.add_overlay(&quick_settings);

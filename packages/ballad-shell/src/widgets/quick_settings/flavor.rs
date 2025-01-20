@@ -144,7 +144,7 @@ fn variant_options(variant: ThemeVariant, retained_selection: Reactive<ThemeSele
     let service = CONFIG_SERVICE.with(|service| LazyCell::force(service).clone());
     let container = Box::builder()
         .orientation(Orientation::Vertical)
-        .spacing(8)
+        .spacing(4)
         .halign(Align::Start)
         .build();
     let buttons = Rc::new(RefCell::new(Vec::new()));
