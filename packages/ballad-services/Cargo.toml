@@ -17,4 +17,4 @@ smol = { workspace = true }
 futures = { version = "0.3.31", default-features = false, features = ["std", "async-await"] }
 
 serde_json = "1.0.135"
-niri-ipc = "25.1.0"
+niri-ipc = "25.8.0"
